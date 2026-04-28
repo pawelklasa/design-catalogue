@@ -1,0 +1,1619 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>A Public Catalogue — Klasa, P.</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,wght@0,400;1,400&display=swap" />
+
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter Tight', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    background: #eaeef2;
+    color: #0d1117;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; font-feature-settings: "ss01"; }
+  .serif { font-family: 'Source Serif 4', Georgia, serif; }
+
+  button { font-family: inherit; }
+  input::placeholder { color: rgba(14,14,13,0.3); }
+
+  .entryrow:hover, .cardcell:hover, .trow:hover {
+    background: rgba(14,14,13,0.025);
+  }
+  .indexcell:hover {
+    background: rgba(14,14,13,0.04);
+  }
+
+  @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slidein { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+  ::selection { background: #1f4380; color: #eaeef2; }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: rgba(14,14,13,0.2); }
+  ::-webkit-scrollbar-track { background: transparent; }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- tweaks-panel -->
+<script type="text/babel" data-presets="react">
+const __TWEAKS_STYLE = `
+  .twk-panel{position:fixed;right:16px;bottom:16px;z-index:2147483646;width:280px;
+    max-height:calc(100vh - 32px);display:flex;flex-direction:column;
+    background:rgba(250,249,247,.78);color:#29261b;
+    -webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);
+    border:.5px solid rgba(255,255,255,.6);border-radius:14px;
+    box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 12px 40px rgba(0,0,0,.18);
+    font:11.5px/1.4 ui-sans-serif,system-ui,-apple-system,sans-serif;overflow:hidden}
+  .twk-hd{display:flex;align-items:center;justify-content:space-between;
+    padding:10px 8px 10px 14px;cursor:move;user-select:none}
+  .twk-hd b{font-size:12px;font-weight:600;letter-spacing:.01em}
+  .twk-x{appearance:none;border:0;background:transparent;color:rgba(41,38,27,.55);
+    width:22px;height:22px;border-radius:6px;cursor:default;font-size:13px;line-height:1}
+  .twk-x:hover{background:rgba(0,0,0,.06);color:#29261b}
+  .twk-body{padding:2px 14px 14px;display:flex;flex-direction:column;gap:10px;
+    overflow-y:auto;overflow-x:hidden;min-height:0;
+    scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.15) transparent}
+  .twk-body::-webkit-scrollbar{width:8px}
+  .twk-body::-webkit-scrollbar-track{background:transparent;margin:2px}
+  .twk-body::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:4px;
+    border:2px solid transparent;background-clip:content-box}
+  .twk-body::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.25);
+    border:2px solid transparent;background-clip:content-box}
+  .twk-row{display:flex;flex-direction:column;gap:5px}
+  .twk-row-h{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+  .twk-lbl{display:flex;justify-content:space-between;align-items:baseline;
+    color:rgba(41,38,27,.72)}
+  .twk-lbl>span:first-child{font-weight:500}
+  .twk-val{color:rgba(41,38,27,.5);font-variant-numeric:tabular-nums}
+  .twk-sect{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    color:rgba(41,38,27,.45);padding:10px 0 0}
+  .twk-sect:first-child{padding-top:0}
+  .twk-field{appearance:none;width:100%;height:26px;padding:0 8px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:7px;
+    background:rgba(255,255,255,.6);color:inherit;font:inherit;outline:none}
+  .twk-field:focus{border-color:rgba(0,0,0,.25);background:rgba(255,255,255,.85)}
+  select.twk-field{padding-right:22px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='rgba(0,0,0,.5)' d='M0 0h10L5 6z'/></svg>");
+    background-repeat:no-repeat;background-position:right 8px center}
+  .twk-slider{appearance:none;-webkit-appearance:none;width:100%;height:4px;margin:6px 0;
+    border-radius:999px;background:rgba(0,0,0,.12);outline:none}
+  .twk-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+    width:14px;height:14px;border-radius:50%;background:#fff;
+    border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
+  .twk-slider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;
+    background:#fff;border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
+  .twk-seg{position:relative;display:flex;padding:2px;border-radius:8px;
+    background:rgba(0,0,0,.06);user-select:none}
+  .twk-seg-thumb{position:absolute;top:2px;bottom:2px;border-radius:6px;
+    background:rgba(255,255,255,.9);box-shadow:0 1px 2px rgba(0,0,0,.12);
+    transition:left .15s cubic-bezier(.3,.7,.4,1),width .15s}
+  .twk-seg.dragging .twk-seg-thumb{transition:none}
+  .twk-seg button{appearance:none;position:relative;z-index:1;flex:1;border:0;
+    background:transparent;color:inherit;font:inherit;font-weight:500;min-height:22px;
+    border-radius:6px;cursor:default;padding:4px 6px;line-height:1.2;overflow-wrap:anywhere}
+  .twk-toggle{position:relative;width:32px;height:18px;border:0;border-radius:999px;
+    background:rgba(0,0,0,.15);transition:background .15s;cursor:default;padding:0}
+  .twk-toggle[data-on="1"]{background:#34c759}
+  .twk-toggle i{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+  .twk-toggle[data-on="1"] i{transform:translateX(14px)}
+  .twk-num{display:flex;align-items:center;height:26px;padding:0 0 0 8px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:7px;background:rgba(255,255,255,.6)}
+  .twk-num-lbl{font-weight:500;color:rgba(41,38,27,.6);cursor:ew-resize;
+    user-select:none;padding-right:8px}
+  .twk-num input{flex:1;min-width:0;height:100%;border:0;background:transparent;
+    font:inherit;font-variant-numeric:tabular-nums;text-align:right;padding:0 8px 0 0;
+    outline:none;color:inherit;-moz-appearance:textfield}
+  .twk-num input::-webkit-inner-spin-button,.twk-num input::-webkit-outer-spin-button{
+    -webkit-appearance:none;margin:0}
+  .twk-num-unit{padding-right:8px;color:rgba(41,38,27,.45)}
+  .twk-btn{appearance:none;height:26px;padding:0 12px;border:0;border-radius:7px;
+    background:rgba(0,0,0,.78);color:#fff;font:inherit;font-weight:500;cursor:default}
+  .twk-btn:hover{background:rgba(0,0,0,.88)}
+  .twk-btn.secondary{background:rgba(0,0,0,.06);color:inherit}
+  .twk-btn.secondary:hover{background:rgba(0,0,0,.1)}
+  .twk-swatch{appearance:none;-webkit-appearance:none;width:56px;height:22px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:6px;padding:0;cursor:default;
+    background:transparent;flex-shrink:0}
+  .twk-swatch::-webkit-color-swatch-wrapper{padding:0}
+  .twk-swatch::-webkit-color-swatch{border:0;border-radius:5.5px}
+  .twk-swatch::-moz-color-swatch{border:0;border-radius:5.5px}
+`;
+
+function useTweaks(defaults) {
+  const [values, setValues] = React.useState(defaults);
+  const setTweak = React.useCallback((keyOrEdits, val) => {
+    const edits = typeof keyOrEdits === 'object' && keyOrEdits !== null
+      ? keyOrEdits : { [keyOrEdits]: val };
+    setValues((prev) => ({ ...prev, ...edits }));
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*');
+  }, []);
+  return [values, setTweak];
+}
+
+function TweaksPanel({ title = 'Tweaks', children }) {
+  const [open, setOpen] = React.useState(false);
+  const dragRef = React.useRef(null);
+  const offsetRef = React.useRef({ x: 16, y: 16 });
+  const PAD = 16;
+
+  const clampToViewport = React.useCallback(() => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const w = panel.offsetWidth, h = panel.offsetHeight;
+    const maxRight = Math.max(PAD, window.innerWidth - w - PAD);
+    const maxBottom = Math.max(PAD, window.innerHeight - h - PAD);
+    offsetRef.current = {
+      x: Math.min(maxRight, Math.max(PAD, offsetRef.current.x)),
+      y: Math.min(maxBottom, Math.max(PAD, offsetRef.current.y)),
+    };
+    panel.style.right = offsetRef.current.x + 'px';
+    panel.style.bottom = offsetRef.current.y + 'px';
+  }, []);
+
+  React.useEffect(() => {
+    if (!open) return;
+    clampToViewport();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', clampToViewport);
+      return () => window.removeEventListener('resize', clampToViewport);
+    }
+    const ro = new ResizeObserver(clampToViewport);
+    ro.observe(document.documentElement);
+    return () => ro.disconnect();
+  }, [open, clampToViewport]);
+
+  React.useEffect(() => {
+    const onMsg = (e) => {
+      const t = e?.data?.type;
+      if (t === '__activate_edit_mode') setOpen(true);
+      else if (t === '__deactivate_edit_mode') setOpen(false);
+    };
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  const dismiss = () => {
+    setOpen(false);
+    window.parent.postMessage({ type: '__edit_mode_dismissed' }, '*');
+  };
+
+  const onDragStart = (e) => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const r = panel.getBoundingClientRect();
+    const sx = e.clientX, sy = e.clientY;
+    const startRight = window.innerWidth - r.right;
+    const startBottom = window.innerHeight - r.bottom;
+    const move = (ev) => {
+      offsetRef.current = {
+        x: startRight - (ev.clientX - sx),
+        y: startBottom - (ev.clientY - sy),
+      };
+      clampToViewport();
+    };
+    const up = () => {
+      window.removeEventListener('mousemove', move);
+      window.removeEventListener('mouseup', up);
+    };
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', up);
+  };
+
+  if (!open) return null;
+  return (
+    <>
+      <style>{__TWEAKS_STYLE}</style>
+      <div ref={dragRef} className="twk-panel"
+           style={{ right: offsetRef.current.x, bottom: offsetRef.current.y }}>
+        <div className="twk-hd" onMouseDown={onDragStart}>
+          <b>{title}</b>
+          <button className="twk-x" aria-label="Close tweaks"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={dismiss}>✕</button>
+        </div>
+        <div className="twk-body">{children}</div>
+      </div>
+    </>
+  );
+}
+
+function TweakSection({ label, children }) {
+  return (
+    <>
+      <div className="twk-sect">{label}</div>
+      {children}
+    </>
+  );
+}
+
+function TweakRow({ label, value, children, inline = false }) {
+  return (
+    <div className={inline ? 'twk-row twk-row-h' : 'twk-row'}>
+      <div className="twk-lbl">
+        <span>{label}</span>
+        {value != null && <span className="twk-val">{value}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function TweakSlider({ label, value, min = 0, max = 100, step = 1, unit = '', onChange }) {
+  return (
+    <TweakRow label={label} value={`${value}${unit}`}>
+      <input type="range" className="twk-slider" min={min} max={max} step={step}
+             value={value} onChange={(e) => onChange(Number(e.target.value))} />
+    </TweakRow>
+  );
+}
+
+function TweakToggle({ label, value, onChange }) {
+  return (
+    <div className="twk-row twk-row-h">
+      <div className="twk-lbl"><span>{label}</span></div>
+      <button type="button" className="twk-toggle" data-on={value ? '1' : '0'}
+              role="switch" aria-checked={!!value}
+              onClick={() => onChange(!value)}><i /></button>
+    </div>
+  );
+}
+
+function TweakRadio({ label, value, options, onChange }) {
+  const trackRef = React.useRef(null);
+  const [dragging, setDragging] = React.useState(false);
+  const opts = options.map((o) => (typeof o === 'object' ? o : { value: o, label: o }));
+  const idx = Math.max(0, opts.findIndex((o) => o.value === value));
+  const n = opts.length;
+  const valueRef = React.useRef(value);
+  valueRef.current = value;
+
+  const segAt = (clientX) => {
+    const r = trackRef.current.getBoundingClientRect();
+    const inner = r.width - 4;
+    const i = Math.floor(((clientX - r.left - 2) / inner) * n);
+    return opts[Math.max(0, Math.min(n - 1, i))].value;
+  };
+
+  const onPointerDown = (e) => {
+    setDragging(true);
+    const v0 = segAt(e.clientX);
+    if (v0 !== valueRef.current) onChange(v0);
+    const move = (ev) => {
+      if (!trackRef.current) return;
+      const v = segAt(ev.clientX);
+      if (v !== valueRef.current) onChange(v);
+    };
+    const up = () => {
+      setDragging(false);
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+
+  return (
+    <TweakRow label={label}>
+      <div ref={trackRef} role="radiogroup" onPointerDown={onPointerDown}
+           className={dragging ? 'twk-seg dragging' : 'twk-seg'}>
+        <div className="twk-seg-thumb"
+             style={{ left: `calc(2px + ${idx} * (100% - 4px) / ${n})`,
+                      width: `calc((100% - 4px) / ${n})` }} />
+        {opts.map((o) => (
+          <button key={o.value} type="button" role="radio" aria-checked={o.value === value}>
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </TweakRow>
+  );
+}
+
+function TweakSelect({ label, value, options, onChange }) {
+  return (
+    <TweakRow label={label}>
+      <select className="twk-field" value={value} onChange={(e) => onChange(e.target.value)}>
+        {options.map((o) => {
+          const v = typeof o === 'object' ? o[0] : o;
+          const l = typeof o === 'object' ? o[1] : o;
+          return <option key={v} value={v}>{l}</option>;
+        })}
+      </select>
+    </TweakRow>
+  );
+}
+
+function TweakText({ label, value, placeholder, onChange }) {
+  return (
+    <TweakRow label={label}>
+      <input className="twk-field" type="text" value={value} placeholder={placeholder}
+             onChange={(e) => onChange(e.target.value)} />
+    </TweakRow>
+  );
+}
+
+function TweakNumber({ label, value, min, max, step = 1, unit = '', onChange }) {
+  const clamp = (n) => {
+    if (min != null && n < min) return min;
+    if (max != null && n > max) return max;
+    return n;
+  };
+  const startRef = React.useRef({ x: 0, val: 0 });
+  const onScrubStart = (e) => {
+    e.preventDefault();
+    startRef.current = { x: e.clientX, val: value };
+    const decimals = (String(step).split('.')[1] || '').length;
+    const move = (ev) => {
+      const dx = ev.clientX - startRef.current.x;
+      const raw = startRef.current.val + dx * step;
+      const snapped = Math.round(raw / step) * step;
+      onChange(clamp(Number(snapped.toFixed(decimals))));
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+  return (
+    <div className="twk-num">
+      <span className="twk-num-lbl" onPointerDown={onScrubStart}>{label}</span>
+      <input type="number" value={value} min={min} max={max} step={step}
+             onChange={(e) => onChange(clamp(Number(e.target.value)))} />
+      {unit && <span className="twk-num-unit">{unit}</span>}
+    </div>
+  );
+}
+
+function TweakColor({ label, value, onChange }) {
+  return (
+    <div className="twk-row twk-row-h">
+      <div className="twk-lbl"><span>{label}</span></div>
+      <input type="color" className="twk-swatch" value={value}
+             onChange={(e) => onChange(e.target.value)} />
+    </div>
+  );
+}
+
+function TweakButton({ label, onClick, secondary = false }) {
+  return (
+    <button type="button" className={secondary ? 'twk-btn secondary' : 'twk-btn'}
+            onClick={onClick}>{label}</button>
+  );
+}
+
+Object.assign(window, {
+  useTweaks, TweaksPanel, TweakSection, TweakRow,
+  TweakSlider, TweakToggle, TweakRadio, TweakSelect,
+  TweakText, TweakNumber, TweakColor, TweakButton,
+});
+</script>
+
+<!-- data -->
+<script type="text/babel" data-presets="react">
+const ENTRIES = [
+  // ========== WORK ==========
+  {
+    id: "PVK-26-000", cat: "WORK", year: 2026, status: "live",
+    title: "Scoraq — Bridge the gap between ideas and execution",
+    short: "Founder & designer. A working operating system for product teams turning brief into ship.",
+    tags: ["founder", "saas", "product", "0→1"],
+    body: "Most product teams have plenty of ideas and plenty of tickets — and a chasm in between. Scoraq sits in that chasm. It's a workspace that holds a brief, an exploration, a decision, and the work that follows it as one continuous artefact rather than four disconnected ones. Built on the conviction that the document is the team, not the meeting. Designing it, founding it, shipping it.",
+    metrics: [["Stage", "Live"], ["Role", "Founder · Design lead"], ["Domain", "scoraq.com"]],
+    company: "Scoraq",
+    role: "Founder",
+    refs: ["scoraq.com/info"],
+  },
+  {
+    id: "PVK-24-001", cat: "WORK", year: 2024, status: "shipped",
+    title: "Hazelcast Management Center — Cluster Topology",
+    short: "Real-time spatial view of a distributed in-memory data grid. 40k+ partitions, sub-second updates.",
+    tags: ["enterprise", "data-viz", "react", "websocket"],
+    body: "Replaced a tabular member list with a force-directed graph rendering the live partition table. The hard problem wasn't drawing nodes — it was deciding what to omit. At 40k partitions, density kills meaning. We collapsed by membership group, exposed only the migrating partitions in motion, and let users drill into a single member without leaving the canvas.",
+    metrics: [["MAU", "12.4k"], ["Time-to-incident", "−68%"], ["Released", "v5.4"]],
+    company: "Hazelcast",
+    role: "Lead Product Designer",
+    refs: ["hazelcast.com/products/management-center"],
+  },
+  {
+    id: "PVK-24-002", cat: "WORK", year: 2024, status: "shipped",
+    title: "SQL Browser for the In-Memory Engine",
+    short: "Query a 200-node cluster like it's a single database. Notebook-style with cell history.",
+    tags: ["sql", "developer-tools", "monaco"],
+    body: "Engineers were leaving our product to run queries in third-party tools. We built a Monaco-backed query surface with first-class support for streaming results, plan visualisation, and the SQL dialects unique to a distributed engine. Notebooks save to the cluster itself, so a 3am incident query is still there next morning.",
+    metrics: [["Adoption", "73% of clusters"], ["Avg session", "11min"]],
+    company: "Hazelcast",
+    role: "Lead Product Designer",
+  },
+  {
+    id: "PVK-23-003", cat: "WORK", year: 2023, status: "shipped",
+    title: "Viridian Cloud Console",
+    short: "Self-serve cluster provisioning from zero to running query in under 90 seconds.",
+    tags: ["cloud", "onboarding", "billing"],
+    body: "The free-tier flow used to take 14 minutes and 9 screens. We compressed it to a single configuration sheet — region, size, name — and committed everything else to defaults. The defaults were the design.",
+    metrics: [["TTFQ", "1m 24s"], ["Activation", "+41%"]],
+    company: "Hazelcast",
+    role: "Lead Product Designer",
+  },
+  {
+    id: "PVK-22-004", cat: "WORK", year: 2022, status: "shipped",
+    title: "Streaming Pipeline Builder",
+    short: "Drag-to-compose Jet pipelines. Source → transform → sink, with live throughput on every edge.",
+    tags: ["node-editor", "canvas", "streams"],
+    body: "Most pipeline UIs lie about scale — pretty for the demo, useless past 30 nodes. We built a deterministic auto-layout, edge-bundling at high zoom-out, and a panel that shows backpressure as it happens. The canvas can hold a 400-node pipeline without flinching.",
+    metrics: [["Max nodes tested", "412"], ["TTI", "240ms"]],
+    company: "Hazelcast",
+  },
+  {
+    id: "PVK-21-005", cat: "WORK", year: 2021, status: "archived",
+    title: "Kibana Plugin — Cache Insights",
+    short: "Side-by-side cache and index telemetry inside an existing observability stack.",
+    tags: ["plugin", "elastic", "observability"],
+    body: "Built when 'observability' meant five tools open at once. The plugin surfaced cache hit ratios next to query latencies in the Kibana the ops team already lived in. Deprecated when we shipped our own console — but the lesson, meet users where they are, is still the right one.",
+    company: "Hazelcast",
+  },
+
+  // ========== ATOM ==========
+  {
+    id: "PVK-24-101", cat: "ATOM", year: 2024,
+    title: "DataTable — virtualised, resizable, sticky everything",
+    short: "10M-row table component with column pinning, group headers, and inline edit.",
+    tags: ["react", "virtualisation", "table"],
+    body: "Three years of incremental work distilled into one component. Row virtualisation via fixed-height windowing, column virtualisation by intersection observer, sticky group headers via position: sticky pyramids. Used across six products.",
+    refs: ["github.com/pawelklasa (private)"],
+  },
+  {
+    id: "PVK-24-102", cat: "ATOM", year: 2024,
+    title: "CommandBar — universal launcher",
+    short: "⌘K palette with action providers, fuzzy match, and recent-history weighting.",
+    tags: ["react", "search", "kbd"],
+    body: "Action providers are pluggable: any feature can register entries that surface in the bar. Fuzzy matcher uses sub-sequence + acronym scoring; recents get a logarithmic boost. The animation is intentionally fast — 80ms — because the bar should disappear before you finish thinking about it.",
+  },
+  {
+    id: "PVK-23-103", cat: "ATOM", year: 2023,
+    title: "InlineDiff — semantic JSON delta",
+    short: "Side-by-side and unified diff, with structural awareness.",
+    tags: ["json", "diff", "monaco"],
+    body: "Stops yelling about whitespace. Renames are detected and shown as renames. Reordered arrays don't appear changed unless you ask for ordered comparison.",
+  },
+  {
+    id: "PVK-23-104", cat: "ATOM", year: 2023,
+    title: "Toast — deterministic, stack-aware",
+    short: "No spinning queue. No 'dismiss all'. Replaces itself with newer state.",
+    tags: ["react", "state"],
+    body: "Toasts in most systems are a ledger. This one is a register: a new toast for the same key replaces the old one in place. Three slots maximum, oldest evicted. Less honest, more useful.",
+  },
+  {
+    id: "PVK-22-105", cat: "ATOM", year: 2022,
+    title: "Sparkline — 1px-anti-aliased",
+    short: "Crisp inline metric chart at 16×40, no library.",
+    tags: ["svg", "data-viz"],
+    body: "Library sparklines blur because they don't respect device pixels. This one snaps to half-pixel grid, draws a polyline of integer Y, and looks correct at 1× and 2×. 1.4kb gzipped.",
+  },
+
+  // ========== METHOD ==========
+  {
+    id: "PVK-METHOD-01", cat: "METHOD", year: 2024,
+    title: "The Empty State Test",
+    short: "If your empty state is a shrug, your filled state is a lie.",
+    tags: ["heuristic", "writing"],
+    body: "Design the empty state first. Not the 'first-run welcome' empty state — the one a power user lands in when their cluster has zero alerts. If you can only describe it as 'No items', the feature is decoration. If you can give it a default action, a metric to brag about, a useful link — the feature has earned its panel.",
+  },
+  {
+    id: "PVK-METHOD-02", cat: "METHOD", year: 2024,
+    title: "Defaults Are The Design",
+    short: "Every config knob is a confession that the team couldn't decide.",
+    tags: ["heuristic", "decision"],
+    body: "Knobs scale linearly in cost and quadratically in support burden. Ship with one opinion. If two equally-valid opinions exist, pick one and document the other as 'why we didn't'. The user can always file a feature request — they cannot un-confuse themselves at 2am.",
+  },
+  {
+    id: "PVK-METHOD-03", cat: "METHOD", year: 2023,
+    title: "The Hairline Rule",
+    short: "If a line is only there to separate, it should be 1px and the lightest possible value.",
+    tags: ["visual", "heuristic"],
+    body: "Borders are not architecture. They are stitches. A thick border says 'this thing matters'; if everything matters, nothing does. Reserve thick lines for actual emphasis (a sidebar edge, a focused element). The rest gets a hairline at 8% opacity. Density without noise.",
+  },
+  {
+    id: "PVK-METHOD-04", cat: "METHOD", year: 2023,
+    title: "Tooltips Are An Apology",
+    short: "Every tooltip is a label that didn't fit. Ask why it didn't fit.",
+    tags: ["heuristic", "writing"],
+    body: "Sometimes the answer is honest — a chart's data point can't carry text. But often the answer is that the icon was wrong, or the column header was wrong, or the action was hidden when it shouldn't have been. Audit your tooltips quarterly and earn back what you can.",
+  },
+
+  // ========== TOOL ==========
+  {
+    id: "PVK-TOOL-01", cat: "TOOL", year: 2024, status: "available",
+    title: "Hairline Grid (Figma)",
+    short: "12-col, 8pt-baseline working file. Includes the only auto-layout cheat sheet you'll need.",
+    tags: ["figma", "grid", "starter"],
+    body: "A working file, not a 'design system'. 12 columns, 8pt baseline, and three pre-built layouts I rebuild on every project anyway. Fork it.",
+    download: "hairline-grid-v3.fig",
+    size: "1.2 MB",
+  },
+  {
+    id: "PVK-TOOL-02", cat: "TOOL", year: 2024, status: "available",
+    title: "useStickyState — React hook",
+    short: "useState that survives a page reload. 18 lines. No dependencies.",
+    tags: ["react", "hook", "snippet"],
+    body: "Drop-in replacement for useState that persists to localStorage with a serializer hook. Used in every prototype I make.",
+    download: "useStickyState.ts",
+    size: "612 bytes",
+  },
+  {
+    id: "PVK-TOOL-03", cat: "TOOL", year: 2023, status: "available",
+    title: "Interview Kit — Senior PD",
+    short: "The take-home brief and rubric I used to hire 3 designers at Hazelcast.",
+    tags: ["hiring", "rubric"],
+    body: "A small brief that takes ~2 hours. The rubric scores process, craft, and communication on equal footing. Open-sourced because hiring rubrics shouldn't be a trade secret.",
+    download: "interview-kit.pdf",
+    size: "84 KB",
+  },
+
+  // ========== DEAD ==========
+  {
+    id: "PVK-DEAD-01", cat: "DEAD", year: 2023, status: "shelved",
+    title: "Voice-controlled query builder",
+    short: "\"Show me caches with hit-ratio under 40 percent.\" Worked. Nobody used it.",
+    tags: ["voice", "experiment"],
+    body: "Built it for a hackathon, demo'd well, shipped to beta. Engineers don't talk to their tools — they like silence and they like their hands on the keyboard. Lesson: novel input modalities solve discovery problems they don't have.",
+  },
+  {
+    id: "PVK-DEAD-02", cat: "DEAD", year: 2022, status: "shelved",
+    title: "Skeuomorphic gauge dashboard",
+    short: "Brushed steel, drop shadows, the works. Looked great at 1×; illegible at 2×.",
+    tags: ["dashboard", "skeuo"],
+    body: "Tried to make ops feel like a control room. Turns out ops engineers don't want to feel like anything — they want their numbers in a row, sortable. Killed after a week of usability sessions where the kindest feedback was 'it's nice'.",
+  },
+
+  // ========== WRITING ==========
+  {
+    id: "PVK-WR-01", cat: "WRITING", year: 2026, when: "Apr 20, 2026", status: "published",
+    title: "On being a designer in the most interesting, exhausting moment of our careers.",
+    short: "The Four Pressures.",
+    tags: ["essay", "bootcamp", "craft"],
+    body: "Pinned essay for Bootcamp on the simultaneous compression of design's tooling, scope, audience, and pace. Argues that the 'four pressures' aren't separate forces — they're the same shift, observed from four sides, and that the only durable response is to commit harder to taste rather than retreat into process.",
+    refs: ["medium.com/design-bootcamp/on-being-a-designer-in-the-most-interesting-exhausting-moment-of-our-careers-7284735e0927"],
+  },
+  {
+    id: "PVK-WR-02", cat: "WRITING", year: 2025, when: "Sep 5, 2025", status: "published",
+    title: "The AI Winter Is Coming",
+    short: "Scale gave us a tool, not a mind.",
+    tags: ["essay", "ai", "forecast"],
+    body: "Pinned. Argues that the gap between capability demos and durable utility is wider than the funding cycle accounts for, and outlines what an actual winter looks like for design teams who've already restructured around the prediction.",
+    refs: ["medium.com/@pawel.klasa/the-ai-winter-is-coming-096b4fcaa461"],
+  },
+  {
+    id: "PVK-WR-03", cat: "WRITING", year: 2026, when: "Apr 27, 2026", status: "published",
+    title: "The AI Winter Has Started.",
+    short: "Seven months later…",
+    tags: ["essay", "ai", "follow-up"],
+    body: "The follow-up to the September forecast. A field report, not a victory lap.",
+    refs: ["medium.com/design-bootcamp/the-ai-winter-has-started-7b3fa237077e"],
+  },
+  {
+    id: "PVK-WR-04", cat: "WRITING", year: 2026, when: "Apr 22, 2026", status: "published",
+    title: "Color is finally OK",
+    short: "A solo developer's blog post replaced sixty years of color science. Most designers and developers missed it.",
+    tags: ["color", "oklch", "craft"],
+    body: "On the quiet arrival of OKLCH in browsers and what it changes about how we should specify color in design tokens — perceptually uniform contrast, predictable mixing, and the death of the eyedropper hex value.",
+    refs: ["medium.com/design-bootcamp/color-is-finally-ok-82f368f3408c"],
+  },
+  {
+    id: "PVK-WR-05", cat: "WRITING", year: 2026, when: "Apr 19, 2026", status: "published",
+    title: "Figma Is Fine. Your Job Might Not Be.",
+    short: "Claude Design launched 48 hours ago. Here is what it actually means.",
+    tags: ["essay", "ai", "figma", "tooling"],
+    body: "A working designer's first impressions of Claude Design and what it implies for the next eighteen months of the discipline. Less doom than headlines suggest; more rearrangement than panic.",
+    refs: ["medium.com/design-bootcamp/figma-is-fine-your-job-might-not-be-df42ee0e33a4"],
+  },
+  {
+    id: "PVK-WR-06", cat: "WRITING", year: 2025, when: "Feb 26, 2025", status: "published",
+    title: "The “Weekend Thief”: Why Most Design Take-Homes are Broken",
+    short: "On the unpaid labour we still call screening.",
+    tags: ["hiring", "essay", "ethics"],
+    body: "The take-home brief is the most defended bad idea in our hiring stack. Argues for a paid 90-minute pairing exercise instead, and provides a rubric (see PVK-TOOL-03).",
+    refs: ["medium.com/design-bootcamp/the-weekend-thief-why-most-design-take-homes-are-broken-850465045404"],
+  },
+  {
+    id: "PVK-WR-07", cat: "WRITING", year: 2025, when: "Nov 25, 2025", status: "published",
+    title: "Hands-On review of building with Claude Opus 4.5",
+    short: "The Agent on the Keyboard.",
+    tags: ["ai", "review", "workflow"],
+    body: "Two-week working diary. What it's good at (interface scaffolds, refactors, the boring 60%), what it isn't (taste, restraint, knowing when to stop), and what changed about my day-to-day as a result.",
+    refs: ["medium.com/design-bootcamp/hands-on-review-of-building-with-claude-opus-4-5-e587fd877775"],
+  },
+  {
+    id: "PVK-WR-08", cat: "WRITING", year: 2025, when: "Sep 19, 2025", status: "published",
+    title: "Harry Beck's Radical Idea: A Lesson in Disruption",
+    short: "The Tube Map: A Case Study in User-Centred Design.",
+    tags: ["history", "information-design"],
+    body: "How a draughtsman with no remit redrew London by ignoring its geography. The argument: the most useful thing you can do for a user is to stop showing them what's true and start showing them what's relevant.",
+    refs: ["medium.com/design-bootcamp/harry-becks-radical-idea-a-lesson-in-disruption-6637fe2ac38e"],
+  },
+  {
+    id: "PVK-WR-09", cat: "WRITING", year: 2025, when: "Sep 17, 2025", status: "published",
+    title: "How Apple's New iOS Design Fails at Accessibility",
+    short: "Losing Sight of Clarity.",
+    tags: ["accessibility", "ios", "critique"],
+    body: "A specific, measurable critique. Contrast ratios, hit targets, motion budgets — the things that used to be load-bearing in Apple's HIG and aren't, in places, anymore.",
+    refs: ["medium.com/design-bootcamp/how-apples-new-ios-design-fails-at-accessibility-0c51151d645e"],
+  },
+  {
+    id: "PVK-WR-10", cat: "WRITING", year: 2025, when: "Sep 15, 2025", status: "published",
+    title: "We Fired Our Personas",
+    short: "How archetypes turned our design chaos into a clear path forward.",
+    tags: ["research", "personas", "archetypes"],
+    body: "The smiley-face persona problem in B2B big-data tools, and why an archetype framework — fewer, sharper, role-based — gave the team a usable shorthand the personas never managed.",
+    refs: ["medium.com/design-bootcamp/why-i-ditched-smiley-personas-for-an-archetype-framework-in-big-data-design-3518fe442923"],
+  },
+];
+
+window.ENTRIES = ENTRIES;
+</script>
+
+<!-- chrome: themes, CATS, Cover, Controls -->
+<script type="text/babel" data-presets="react">
+const { useState: useStateC, useMemo: useMemoC, useEffect: useEffectC, useRef: useRefC } = React;
+
+const THEMES = {
+  paper: {
+    bg: "#eaeef2", card: "#f0f3f6",
+    ink: "#0d1117", ink70: "rgba(13,17,23,0.62)", ink40: "rgba(13,17,23,0.38)",
+    ink15: "rgba(13,17,23,0.13)", ink08: "rgba(13,17,23,0.06)", accent: "#1f4380",
+  },
+  cream: {
+    bg: "#f5f0e6", card: "#faf6ed",
+    ink: "#1a1612", ink70: "rgba(26,22,18,0.62)", ink40: "rgba(26,22,18,0.38)",
+    ink15: "rgba(26,22,18,0.13)", ink08: "rgba(26,22,18,0.06)", accent: "#a8421a",
+  },
+  sage: {
+    bg: "#e8ebe1", card: "#eef0e8",
+    ink: "#1a1f17", ink70: "rgba(26,31,23,0.62)", ink40: "rgba(26,31,23,0.38)",
+    ink15: "rgba(26,31,23,0.13)", ink08: "rgba(26,31,23,0.06)", accent: "#2d5d3a",
+  },
+  ochre: {
+    bg: "#efe5d2", card: "#f4ecdb",
+    ink: "#1f1810", ink70: "rgba(31,24,16,0.62)", ink40: "rgba(31,24,16,0.38)",
+    ink15: "rgba(31,24,16,0.13)", ink08: "rgba(31,24,16,0.06)", accent: "#c1390f",
+  },
+  blush: {
+    bg: "#f4e8e4", card: "#f8eee9",
+    ink: "#1d1311", ink70: "rgba(29,19,17,0.62)", ink40: "rgba(29,19,17,0.38)",
+    ink15: "rgba(29,19,17,0.13)", ink08: "rgba(29,19,17,0.06)", accent: "#a83856",
+  },
+  ink: {
+    bg: "#0d0d0d", card: "#141413",
+    ink: "#f1ede2", ink70: "rgba(241,237,226,0.66)", ink40: "rgba(241,237,226,0.4)",
+    ink15: "rgba(241,237,226,0.15)", ink08: "rgba(241,237,226,0.08)", accent: "#ff5a1f",
+  },
+  blueprint: {
+    bg: "#0a2a4a", card: "#0d3158",
+    ink: "#e8f0ff", ink70: "rgba(232,240,255,0.66)", ink40: "rgba(232,240,255,0.4)",
+    ink15: "rgba(232,240,255,0.18)", ink08: "rgba(232,240,255,0.1)", accent: "#ffd166",
+  },
+};
+
+const CATS = {
+  WORK:    { label: "Work",        desc: "Case studies. Things that shipped." },
+  ATOM:    { label: "Atoms",       desc: "Components. Reusable interface units." },
+  METHOD:  { label: "Methods",     desc: "Heuristics. Opinions, codified." },
+  WRITING: { label: "Writing",     desc: "Essays and articles. Mostly Bootcamp." },
+  TOOL:    { label: "Tools",       desc: "Files and snippets. Take them." },
+  DEAD:    { label: "Dead ends",   desc: "Failed experiments. Open archive." },
+  FEED:    { label: "Feed",        desc: "Live commits, contributions, activity." },
+};
+
+function Cover({ theme, total, byCat, onJump }) {
+  const T = THEMES[theme];
+  return (
+    <section style={{ borderBottom: `1px solid ${T.ink15}` }}>
+      <div style={{ padding: "56px 48px 40px", display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1.4fr)", gap: 48, alignItems: "start" }}>
+        <div>
+          <div className="mono" style={{ fontSize: 11, letterSpacing: "0.08em", color: T.ink40, textTransform: "uppercase", marginBottom: 24 }}>
+            Vol. 01 — Klasa, P. — 1st printing — Apr 2026
+          </div>
+          <h1 style={{ fontFamily: "'Inter Tight', sans-serif", fontWeight: 500, fontSize: 88, lineHeight: 0.92, letterSpacing: "-0.04em", margin: 0, color: T.ink }}>
+            A public<br />catalogue<br />of work.
+          </h1>
+          <div className="mono" style={{ marginTop: 28, fontSize: 12, color: T.ink70, lineHeight: 1.6, maxWidth: 460 }}>
+            <span style={{ color: T.accent }}>↳</span> In place of a portfolio.
+            Open shelf, indexed contents, terms of use printed on the spine.
+            All entries inspectable, most reusable, none precious.
+          </div>
+        </div>
+        <div style={{ paddingTop: 6, minWidth: 0, overflowX: "auto" }}>
+          {window.ContributionGraph && <window.ContributionGraph theme={theme} compact={true} />}
+        </div>
+      </div>
+
+      {/* Index strip */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", borderTop: `1px solid ${T.ink15}` }}>
+        {Object.keys(CATS).map((k) => (
+          <button key={k} onClick={() => onJump(k)} className="indexcell"
+            style={{
+              all: "unset", cursor: "pointer", padding: "20px 20px 22px",
+              borderRight: `1px solid ${T.ink15}`,
+              display: "flex", flexDirection: "column", gap: 4,
+            }}>
+            <div className="mono" style={{ fontSize: 10, letterSpacing: "0.1em", color: T.ink40, textTransform: "uppercase" }}>
+              {String(Object.keys(CATS).indexOf(k) + 1).padStart(2, "0")} / {k}
+            </div>
+            <div style={{ fontFamily: "'Inter Tight', sans-serif", fontWeight: 500, fontSize: 22, color: T.ink, letterSpacing: "-0.01em" }}>
+              {CATS[k].label}
+            </div>
+            <div className="mono" style={{ fontSize: 11, color: T.ink70 }}>
+              {byCat[k] || 0} entries
+            </div>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Controls({ theme, query, setQuery, activeCat, setActiveCat, view, setView, total, shown, sort, setSort }) {
+  const T = THEMES[theme];
+  const inputRef = useRefC(null);
+
+  useEffectC(() => {
+    const onKey = (e) => {
+      if (e.key === "/" && document.activeElement?.tagName !== "INPUT") {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+      if (e.key === "Escape") {
+        if (document.activeElement === inputRef.current) inputRef.current.blur();
+        setQuery("");
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [setQuery]);
+
+  return (
+    <div style={{
+      position: "sticky", top: 0, zIndex: 10,
+      background: T.bg,
+      borderBottom: `1px solid ${T.ink15}`,
+    }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr auto", alignItems: "stretch", borderBottom: `1px solid ${T.ink08}` }}>
+        <div style={{ position: "relative", borderRight: `1px solid ${T.ink15}` }}>
+          <span className="mono" style={{ position: "absolute", left: 24, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: T.ink40, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+            Search ⁄ <span style={{ color: T.ink70 }}>press /</span>
+          </span>
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder=""
+            style={{
+              all: "unset", width: "100%", boxSizing: "border-box",
+              padding: "20px 24px 20px 180px",
+              fontFamily: "'Inter Tight', sans-serif",
+              fontSize: 17, color: T.ink,
+              caretColor: T.accent,
+            }}
+          />
+          {query && (
+            <button onClick={() => setQuery("")} className="mono"
+              style={{ all: "unset", cursor: "pointer", position: "absolute", right: 24, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: T.ink40, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+              clear ✕
+            </button>
+          )}
+        </div>
+        <div className="mono" style={{ display: "flex", alignItems: "center", gap: 0, padding: "0 24px", fontSize: 11, color: T.ink70, letterSpacing: "0.08em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+          <span>{String(shown).padStart(3, "0")} / {String(total).padStart(3, "0")}</span>
+          <span style={{ color: T.ink15, margin: "0 16px" }}>│</span>
+          <span style={{ color: T.ink40 }}>showing</span>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", alignItems: "stretch", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "stretch" }}>
+          <FilterPill T={T} active={activeCat === "ALL"} onClick={() => setActiveCat("ALL")}>All</FilterPill>
+          {Object.keys(CATS).map((k) => (
+            <FilterPill key={k} T={T} active={activeCat === k} onClick={() => setActiveCat(k)}>{CATS[k].label}</FilterPill>
+          ))}
+        </div>
+        <div style={{ display: "flex", alignItems: "stretch" }}>
+          <SortControl T={T} sort={sort} setSort={setSort} />
+          <ViewToggle T={T} view={view} setView={setView} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FilterPill({ T, active, onClick, children }) {
+  return (
+    <button onClick={onClick} className="mono"
+      style={{
+        all: "unset", cursor: "pointer",
+        padding: "14px 22px",
+        fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase",
+        color: active ? T.bg : T.ink70,
+        background: active ? T.ink : "transparent",
+        borderRight: `1px solid ${T.ink15}`,
+        transition: "background 80ms",
+      }}>
+      {children}
+    </button>
+  );
+}
+
+function SortControl({ T, sort, setSort }) {
+  const opts = [["recent", "Recent"], ["id", "Call no."], ["az", "A–Z"]];
+  return (
+    <div className="mono" style={{ display: "flex", alignItems: "center", padding: "0 16px", fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: T.ink70, borderLeft: `1px solid ${T.ink15}` }}>
+      <span style={{ color: T.ink40 }}>Sort:</span>
+      {opts.map(([k, l]) => (
+        <button key={k} onClick={() => setSort(k)}
+          style={{ all: "unset", cursor: "pointer", marginLeft: 12, color: sort === k ? T.accent : T.ink70 }}>
+          {l}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ViewToggle({ T, view, setView }) {
+  return (
+    <div style={{ display: "flex", borderLeft: `1px solid ${T.ink15}` }}>
+      {[["index", "≣"], ["card", "▦"], ["table", "⊞"]].map(([v, glyph]) => (
+        <button key={v} onClick={() => setView(v)}
+          style={{
+            all: "unset", cursor: "pointer", padding: "0 18px",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 16, color: view === v ? T.ink : T.ink40,
+            background: view === v ? T.ink08 : "transparent",
+            borderLeft: `1px solid ${T.ink15}`,
+            minWidth: 48,
+          }}>
+          {glyph}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+window.Cover = Cover;
+window.Controls = Controls;
+window.THEMES = THEMES;
+window.CATS = CATS;
+</script>
+
+<!-- views: IndexView, CardView, TableView, Detail -->
+<script type="text/babel" data-presets="react">
+const { useState: useStateE, useEffect: useEffectE } = React;
+
+function IndexView({ entries, theme, onOpen, density }) {
+  const T = window.THEMES[theme];
+  const pad = density === "compact" ? "10px 0" : density === "archival" ? "22px 0" : "16px 0";
+
+  return (
+    <div>
+      <div className="mono" style={{
+        display: "grid",
+        gridTemplateColumns: "120px 90px 1fr 200px 120px",
+        gap: 24,
+        padding: "12px 48px",
+        fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase",
+        color: T.ink40,
+        borderBottom: `1px solid ${T.ink15}`,
+      }}>
+        <span>Call no.</span>
+        <span>Cat.</span>
+        <span>Title</span>
+        <span>Tags</span>
+        <span style={{ textAlign: "right" }}>Year ⁄ Status</span>
+      </div>
+
+      {entries.map((e) => (
+        <button key={e.id} onClick={() => onOpen(e)} className="entryrow"
+          style={{
+            all: "unset", cursor: "pointer", display: "block", width: "100%",
+            borderBottom: `1px solid ${T.ink08}`,
+          }}>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "120px 90px 1fr 200px 120px",
+            gap: 24, padding: `${pad.split(" ")[0]} 48px`,
+            alignItems: "baseline",
+          }}>
+            <span className="mono" style={{ fontSize: 11, color: T.ink70, letterSpacing: "0.04em" }}>{e.id}</span>
+            <span className="mono" style={{ fontSize: 10, color: T.accent, letterSpacing: "0.1em", textTransform: "uppercase" }}>{e.cat}</span>
+            <span style={{ fontFamily: "'Inter Tight', sans-serif", fontSize: density === "compact" ? 16 : 19, color: T.ink, letterSpacing: "-0.01em", lineHeight: 1.25 }}>
+              {e.title}
+              {density !== "compact" && (
+                <span style={{ color: T.ink70, fontSize: 13, fontWeight: 400, display: "block", marginTop: 4, lineHeight: 1.4 }}>
+                  {e.short}
+                </span>
+              )}
+            </span>
+            <span className="mono" style={{ fontSize: 10, color: T.ink40, letterSpacing: "0.04em", lineHeight: 1.5 }}>
+              {(e.tags || []).slice(0, 4).join(" · ")}
+            </span>
+            <span className="mono" style={{ fontSize: 11, color: T.ink70, textAlign: "right", letterSpacing: "0.04em" }}>
+              {e.when || e.year}
+              {e.status && <div style={{ color: T.ink40, fontSize: 10, marginTop: 2, textTransform: "uppercase", letterSpacing: "0.08em" }}>{e.status}</div>}
+            </span>
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function CardView({ entries, theme, onOpen }) {
+  const T = window.THEMES[theme];
+  return (
+    <div style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+      gap: 0,
+      borderTop: `1px solid ${T.ink15}`,
+      borderLeft: `1px solid ${T.ink15}`,
+    }}>
+      {entries.map((e) => (
+        <button key={e.id} onClick={() => onOpen(e)} className="cardcell"
+          style={{
+            all: "unset", cursor: "pointer", display: "block",
+            padding: "24px 24px 28px",
+            borderRight: `1px solid ${T.ink15}`,
+            borderBottom: `1px solid ${T.ink15}`,
+            background: T.card,
+            minHeight: 220,
+          }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 18 }}>
+            <span className="mono" style={{ fontSize: 10, color: T.ink70, letterSpacing: "0.06em" }}>{e.id}</span>
+            <span className="mono" style={{ fontSize: 10, color: T.accent, letterSpacing: "0.1em", textTransform: "uppercase" }}>{e.cat}</span>
+          </div>
+          <div style={{ fontFamily: "'Inter Tight', sans-serif", fontSize: 21, color: T.ink, letterSpacing: "-0.015em", lineHeight: 1.18, marginBottom: 12 }}>
+            {e.title}
+          </div>
+          <div style={{ fontSize: 13, color: T.ink70, lineHeight: 1.45, marginBottom: 20 }}>
+            {e.short}
+          </div>
+          <div className="mono" style={{ fontSize: 10, color: T.ink40, letterSpacing: "0.04em", display: "flex", justifyContent: "space-between", borderTop: `1px solid ${T.ink08}`, paddingTop: 12 }}>
+            <span>{(e.tags || []).slice(0, 3).join(" · ")}</span>
+            <span>{e.when || e.year}</span>
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function TableView({ entries, theme, onOpen }) {
+  const T = window.THEMES[theme];
+  return (
+    <table className="mono" style={{
+      width: "100%", borderCollapse: "collapse",
+      fontSize: 11, color: T.ink70, letterSpacing: "0.02em",
+    }}>
+      <thead>
+        <tr style={{ borderBottom: `1px solid ${T.ink15}` }}>
+          {["#", "Call no.", "Cat.", "Title", "Tags", "Year", "Status"].map((h) => (
+            <th key={h} style={{ textAlign: "left", padding: "12px 16px", color: T.ink40, fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 400 }}>
+              {h}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {entries.map((e, i) => (
+          <tr key={e.id} onClick={() => onOpen(e)}
+            style={{ borderBottom: `1px solid ${T.ink08}`, cursor: "pointer" }}
+            className="trow">
+            <td style={{ padding: "10px 16px", color: T.ink40 }}>{String(i + 1).padStart(3, "0")}</td>
+            <td style={{ padding: "10px 16px", color: T.ink, letterSpacing: "0.04em" }}>{e.id}</td>
+            <td style={{ padding: "10px 16px", color: T.accent, textTransform: "uppercase", letterSpacing: "0.08em" }}>{e.cat}</td>
+            <td style={{ padding: "10px 16px", color: T.ink, fontFamily: "'Inter Tight', sans-serif", fontSize: 14, letterSpacing: "-0.005em" }}>{e.title}</td>
+            <td style={{ padding: "10px 16px", color: T.ink40 }}>{(e.tags || []).slice(0, 3).join(" · ")}</td>
+            <td style={{ padding: "10px 16px" }}>{e.when || e.year}</td>
+            <td style={{ padding: "10px 16px", color: T.ink40, textTransform: "uppercase", letterSpacing: "0.08em", fontSize: 10 }}>{e.status || "—"}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function Detail({ entry, theme, onClose, allEntries }) {
+  const T = window.THEMES[theme];
+
+  useEffectE(() => {
+    if (!entry) return;
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [entry, onClose]);
+
+  if (!entry) return null;
+
+  const idx = allEntries.findIndex((x) => x.id === entry.id);
+  const total = allEntries.length;
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 100,
+      background: "rgba(0,0,0,0.4)",
+      display: "flex", justifyContent: "flex-end",
+      animation: "fadein 120ms ease-out",
+    }} onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()}
+        style={{
+          width: "min(720px, 92vw)", height: "100vh",
+          background: T.bg,
+          borderLeft: `1px solid ${T.ink15}`,
+          overflow: "auto",
+          animation: "slidein 180ms cubic-bezier(0.2,0.8,0.2,1)",
+        }}>
+        <div style={{
+          position: "sticky", top: 0, zIndex: 1,
+          background: T.bg,
+          borderBottom: `1px solid ${T.ink15}`,
+          padding: "16px 32px",
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+        }}>
+          <div className="mono" style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: T.ink40 }}>
+            Record {String(idx + 1).padStart(3, "0")} of {String(total).padStart(3, "0")}
+          </div>
+          <button onClick={onClose} className="mono"
+            style={{ all: "unset", cursor: "pointer", fontSize: 11, color: T.ink70, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+            close ✕ <span style={{ color: T.ink40, marginLeft: 6 }}>(esc)</span>
+          </button>
+        </div>
+
+        <div style={{ padding: "44px 48px 80px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 32, alignItems: "baseline", paddingBottom: 28, borderBottom: `1px solid ${T.ink15}`, marginBottom: 32 }}>
+            <div className="mono" style={{ fontSize: 11, color: T.ink70, letterSpacing: "0.06em", whiteSpace: "nowrap" }}>
+              <div style={{ color: T.ink40, fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>Call no.</div>
+              {entry.id}
+            </div>
+            <div className="mono" style={{ fontSize: 10, color: T.accent, letterSpacing: "0.12em", textTransform: "uppercase", textAlign: "right" }}>
+              {window.CATS[entry.cat].label}
+            </div>
+          </div>
+
+          <h1 style={{ fontFamily: "'Inter Tight', sans-serif", fontWeight: 500, fontSize: 44, lineHeight: 1.04, letterSpacing: "-0.025em", margin: 0, color: T.ink }}>
+            {entry.title}
+          </h1>
+          <p style={{ fontSize: 18, lineHeight: 1.45, color: T.ink70, marginTop: 18, marginBottom: 36, fontFamily: "'Inter Tight', sans-serif" }}>
+            {entry.short}
+          </p>
+
+          <div className="serif" style={{ fontSize: 16, lineHeight: 1.55, color: T.ink, marginBottom: 40, maxWidth: 580 }}>
+            {entry.body}
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", borderTop: `1px solid ${T.ink15}` }}>
+            {[
+              ["Year", entry.year],
+              entry.when && ["Recorded", entry.when],
+              entry.status && ["Status", entry.status],
+              entry.company && ["Company", entry.company],
+              entry.role && ["Role", entry.role],
+              entry.tags && ["Tags", entry.tags.join(" · ")],
+              entry.metrics && ["Metrics", entry.metrics.map(([k, v]) => `${k}: ${v}`).join("  /  ")],
+              entry.refs && ["References", entry.refs.join("  /  ")],
+              entry.download && ["File", `${entry.download} (${entry.size})`],
+            ].filter(Boolean).map(([k, v]) => (
+              <React.Fragment key={k}>
+                <div className="mono" style={{
+                  padding: "12px 0", fontSize: 10, color: T.ink40,
+                  letterSpacing: "0.1em", textTransform: "uppercase",
+                  borderBottom: `1px solid ${T.ink08}`,
+                }}>{k}</div>
+                <div className="mono" style={{
+                  padding: "12px 0", fontSize: 12, color: T.ink,
+                  borderBottom: `1px solid ${T.ink08}`,
+                  letterSpacing: "0.02em", wordBreak: "break-word",
+                }}>{v}</div>
+              </React.Fragment>
+            ))}
+          </div>
+
+          {entry.download && (
+            <button className="mono" style={{
+              all: "unset", cursor: "pointer", marginTop: 36,
+              padding: "16px 24px",
+              background: T.ink, color: T.bg,
+              fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase",
+            }}>
+              ↓ Download {entry.download}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+window.IndexView = IndexView;
+window.CardView = CardView;
+window.TableView = TableView;
+window.Detail = Detail;
+</script>
+
+<!-- contribgraph -->
+<script type="text/babel" data-presets="react">
+function seededRandom(seed) {
+  let s = seed;
+  return () => {
+    s = (s * 9301 + 49297) % 233280;
+    return s / 233280;
+  };
+}
+
+function generateContributions() {
+  const rng = seededRandom(8675309);
+  const cells = [];
+  const today = new Date(2026, 3, 28);
+  const start = new Date(today);
+  start.setDate(start.getDate() - 52 * 7 - today.getDay());
+
+  for (let w = 0; w < 53; w++) {
+    const week = [];
+    for (let d = 0; d < 7; d++) {
+      const date = new Date(start);
+      date.setDate(start.getDate() + w * 7 + d);
+      if (date > today) { week.push(null); continue; }
+      const dayBias = (d === 0 || d === 6) ? 0.45 : 1.0;
+      const isBurst = (w >= 8 && w <= 14) || (w >= 28 && w <= 33) || (w >= 44 && w <= 50);
+      const burstMul = isBurst ? 1.8 : 1.0;
+      const r = rng() * dayBias * burstMul;
+      let level = 0;
+      if (r > 0.55) level = 1;
+      if (r > 0.85) level = 2;
+      if (r > 1.05) level = 3;
+      if (r > 1.3) level = 4;
+      const count = level === 0 ? 0 : Math.floor(r * 6 + level * 2);
+      week.push({ date, level, count });
+    }
+    cells.push(week);
+  }
+  return cells;
+}
+
+const CONTRIB_DATA = generateContributions();
+
+const RECENT_EVENTS = [
+  { when: "2 hours ago", repo: "pawelklasa/Dev-Resources", action: "Pushed 1 commit", detail: "docs: add OKLCH references to color section" },
+  { when: "Yesterday",   repo: "pawelklasa/showcase",      action: "Merged PR #12",   detail: "feat: catalog redirect from /portfolio" },
+  { when: "2 days ago",  repo: "pawelklasa/JS-playground", action: "Pushed 4 commits", detail: "experiments with the View Transition API" },
+  { when: "4 days ago",  repo: "getify/You-Dont-Know-JS",  action: "Opened issue #1842", detail: "ch3: minor errata in async generator example" },
+  { when: "6 days ago",  repo: "pawelklasa/test",          action: "Pushed 2 commits", detail: "wip: claude-design experiments" },
+  { when: "1 week ago",  repo: "pawelklasa/Dev-Resources", action: "Pushed 3 commits", detail: "added local-first databases section" },
+  { when: "9 days ago",  repo: "pawelklasa/showcase",      action: "Merged PR #11",   detail: "fix: reduced-motion hero fallback" },
+];
+
+function ContribCell({ level, T, count, date }) {
+  const levels = T.contribLevels || [T.ink08, "rgba(193,57,15,0.22)", "rgba(193,57,15,0.45)", "rgba(193,57,15,0.7)", T.accent];
+  const bg = level === null ? "transparent" : levels[level];
+  return (
+    <div title={date ? `${count} contributions · ${date.toDateString()}` : ""}
+      style={{
+        width: 11, height: 11, background: bg,
+        outline: level !== null ? `1px solid ${T.ink08}` : "none",
+        outlineOffset: -1,
+      }} />
+  );
+}
+
+function ContributionGraph({ theme, compact }) {
+  const T = window.THEMES[theme];
+  const ramps = {
+    paper:     [T.ink08, "rgba(31,67,128,0.2)",   "rgba(31,67,128,0.45)",   "rgba(31,67,128,0.72)",   T.accent],
+    cream:     [T.ink08, "rgba(168,66,26,0.2)",   "rgba(168,66,26,0.45)",   "rgba(168,66,26,0.72)",   T.accent],
+    sage:      [T.ink08, "rgba(45,93,58,0.2)",    "rgba(45,93,58,0.45)",    "rgba(45,93,58,0.72)",    T.accent],
+    ochre:     [T.ink08, "rgba(193,57,15,0.2)",   "rgba(193,57,15,0.46)",   "rgba(193,57,15,0.74)",   T.accent],
+    blush:     [T.ink08, "rgba(168,56,86,0.2)",   "rgba(168,56,86,0.46)",   "rgba(168,56,86,0.74)",   T.accent],
+    ink:       [T.ink08, "rgba(255,90,31,0.25)",  "rgba(255,90,31,0.5)",    "rgba(255,90,31,0.78)",   T.accent],
+    blueprint: [T.ink08, "rgba(255,209,102,0.25)","rgba(255,209,102,0.55)", "rgba(255,209,102,0.8)",  T.accent],
+  };
+  const Tx = { ...T, contribLevels: ramps[theme] || ramps.paper };
+
+  const totalContribs = CONTRIB_DATA.flat().reduce((sum, c) => sum + (c?.count || 0), 0);
+  const activeDays = CONTRIB_DATA.flat().filter((c) => c && c.count > 0).length;
+  const longestStreak = (() => {
+    let max = 0, cur = 0;
+    for (const w of CONTRIB_DATA) for (const c of w) {
+      if (!c) continue;
+      if (c.count > 0) { cur++; max = Math.max(max, cur); } else cur = 0;
+    }
+    return max;
+  })();
+
+  const monthLabels = [];
+  let lastMonth = -1;
+  for (let w = 0; w < CONTRIB_DATA.length; w++) {
+    const firstDay = CONTRIB_DATA[w].find(Boolean);
+    if (!firstDay) continue;
+    const m = firstDay.date.getMonth();
+    if (m !== lastMonth && firstDay.date.getDate() <= 7) {
+      monthLabels.push({ w, label: firstDay.date.toLocaleString("en", { month: "short" }) });
+      lastMonth = m;
+    }
+  }
+
+  const dayLabels = ["Mon", "Wed", "Fri"];
+
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 24 }}>
+        <div>
+          <div className="mono" style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: T.accent, marginBottom: 6 }}>
+            § FEED · Live
+          </div>
+          <div style={{ fontFamily: "'Inter Tight', sans-serif", fontSize: 32, letterSpacing: "-0.02em", color: T.ink }}>
+            <span className="mono" style={{ fontSize: 24, color: T.ink, letterSpacing: "0.02em" }}>{totalContribs.toLocaleString()}</span>
+            {" "}<span style={{ color: T.ink70, fontSize: 22 }}>contributions in the last year</span>
+          </div>
+          <div className="serif" style={{ fontStyle: "italic", color: T.ink70, marginTop: 6, fontSize: 14 }}>
+            Pulled from <a href="https://github.com/pawelklasa" target="_blank" style={{ color: T.ink70 }}>github.com/pawelklasa</a>. Each square is a day.
+          </div>
+        </div>
+        <div className="mono" style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: T.ink70, textAlign: "right", lineHeight: 1.7, display: "grid", gridTemplateColumns: "auto auto", columnGap: 14, rowGap: 2, justifyContent: "end", alignItems: "baseline" }}>
+          <span style={{ color: T.ink40 }}>Active days</span>
+          <span style={{ color: T.ink, fontSize: 12, justifySelf: "end" }}>{activeDays}</span>
+          <span style={{ color: T.ink40 }}>Longest streak</span>
+          <span style={{ color: T.ink, fontSize: 12, justifySelf: "end" }}>{longestStreak} days</span>
+          <span style={{ color: T.ink40 }}>Public repos</span>
+          <span style={{ color: T.ink, fontSize: 12, justifySelf: "end" }}>101</span>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 2, paddingTop: 18 }}>
+          {[0, 2, 4].map((rowIdx) => (
+            <div key={rowIdx} className="mono" style={{ height: 11 + (rowIdx === 0 ? 0 : 24), display: "flex", alignItems: "flex-end", fontSize: 9, color: T.ink40, letterSpacing: "0.05em" }}>
+              {dayLabels[Math.floor(rowIdx / 2)]}
+            </div>
+          ))}
+        </div>
+        <div style={{ flex: 1, overflowX: "auto" }}>
+          <div style={{ position: "relative", height: 14, marginBottom: 4 }}>
+            {monthLabels.map(({ w, label }) => (
+              <div key={w} className="mono" style={{
+                position: "absolute", left: w * 13,
+                fontSize: 9, color: T.ink40, letterSpacing: "0.08em", textTransform: "uppercase",
+              }}>{label}</div>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 2 }}>
+            {CONTRIB_DATA.map((week, w) => (
+              <div key={w} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                {week.map((cell, d) => (
+                  <ContribCell key={d} level={cell?.level ?? null} count={cell?.count} date={cell?.date} T={Tx} />
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="mono" style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 18, fontSize: 9, color: T.ink40, letterSpacing: "0.08em", textTransform: "uppercase", justifyContent: "flex-end" }}>
+        <span>Less</span>
+        {[0, 1, 2, 3, 4].map((l) => (
+          <div key={l} style={{ width: 11, height: 11, background: ramps[theme][l], outline: `1px solid ${T.ink08}`, outlineOffset: -1 }} />
+        ))}
+        <span>More</span>
+      </div>
+
+      {!compact && (
+        <div style={{ marginTop: 40, borderTop: `1px solid ${T.ink15}`, paddingTop: 24 }}>
+          <div className="mono" style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: T.ink40, marginBottom: 16 }}>
+            Recent activity
+          </div>
+          <div>
+            {RECENT_EVENTS.map((ev, i) => (
+              <div key={i} style={{
+                display: "grid",
+                gridTemplateColumns: "120px 240px 140px 1fr",
+                gap: 24,
+                padding: "12px 0",
+                borderBottom: `1px solid ${T.ink08}`,
+                alignItems: "baseline",
+              }}>
+                <span className="mono" style={{ fontSize: 10, color: T.ink40, letterSpacing: "0.06em", textTransform: "uppercase" }}>{ev.when}</span>
+                <a href={`https://github.com/${ev.repo}`} target="_blank" className="mono" style={{ fontSize: 11, color: T.ink, letterSpacing: "0.02em", textDecoration: "none" }}>{ev.repo}</a>
+                <span className="mono" style={{ fontSize: 10, color: T.accent, letterSpacing: "0.06em", textTransform: "uppercase" }}>{ev.action}</span>
+                <span style={{ fontSize: 13, color: T.ink70 }}>{ev.detail}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+window.ContributionGraph = ContributionGraph;
+</script>
+
+<!-- newsletter -->
+<script type="text/babel" data-presets="react">
+const { useState: useStateN } = React;
+
+function NewsletterCard({ theme, variant }) {
+  const T = window.THEMES[theme];
+  const [email, setEmail] = useStateN("");
+  const [submitted, setSubmitted] = useStateN(false);
+
+  const onSubmit = (e) => {
+    e.preventDefault();
+    if (email && /\S+@\S+\.\S+/.test(email)) setSubmitted(true);
+  };
+
+  if (variant === "inline") {
+    return (
+      <div style={{ marginTop: 28, paddingTop: 20, borderTop: `1px solid ${T.ink15}` }}>
+        <div className="mono" style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: T.accent, marginBottom: 6 }}>
+          § Subscribe
+        </div>
+        <div style={{ fontFamily: "'Inter Tight', sans-serif", fontSize: 17, color: T.ink, letterSpacing: "-0.01em", lineHeight: 1.3, marginBottom: 14, maxWidth: 380 }}>
+          A weekly dispatch from Pav. New entries, half-finished thoughts, the occasional rant.
+        </div>
+        {submitted ? (
+          <div className="mono" style={{ fontSize: 11, color: T.accent, letterSpacing: "0.06em", padding: "12px 0" }}>
+            ✓ Subscribed. First issue lands Monday.
+          </div>
+        ) : (
+          <form onSubmit={onSubmit} style={{ display: "flex", borderTop: `1px solid ${T.ink}`, borderBottom: `1px solid ${T.ink}` }}>
+            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com"
+              style={{ all: "unset", flex: 1, padding: "12px 0", fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: T.ink, caretColor: T.accent }} />
+            <button type="submit" className="mono" style={{ all: "unset", cursor: "pointer", padding: "12px 16px", fontSize: 10, color: T.bg, background: T.ink, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+              Subscribe →
+            </button>
+          </form>
+        )}
+        <div className="mono" style={{ fontSize: 9, color: T.ink40, letterSpacing: "0.08em", textTransform: "uppercase", marginTop: 10 }}>
+          Weekly · No tracking · Unsubscribe anytime
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <section style={{
+      borderBottom: `1px solid ${T.ink15}`,
+      padding: "18px 48px",
+      display: "flex", alignItems: "center", gap: 32, flexWrap: "wrap",
+      background: T.card,
+    }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 14, flex: "1 1 auto", minWidth: 280 }}>
+        <span className="mono" style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: T.accent, whiteSpace: "nowrap" }}>
+          § Newsletter
+        </span>
+        <span style={{ fontFamily: "'Inter Tight', sans-serif", fontSize: 16, color: T.ink, letterSpacing: "-0.005em" }}>
+          A weekly dispatch.
+        </span>
+        <span className="serif" style={{ fontSize: 13, color: T.ink70, fontStyle: "italic" }}>
+          New entries, half-finished thoughts. Mondays.
+        </span>
+      </div>
+      {submitted ? (
+        <div className="mono" style={{ fontSize: 11, color: T.accent, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+          ✓ Subscribed — first issue Monday
+        </div>
+      ) : (
+        <form onSubmit={onSubmit} style={{ display: "flex", border: `1px solid ${T.ink}`, minWidth: 320 }}>
+          <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com"
+            style={{ all: "unset", flex: 1, padding: "10px 14px", fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: T.ink, caretColor: T.accent }} />
+          <button type="submit" className="mono" style={{ all: "unset", cursor: "pointer", padding: "0 18px", fontSize: 10, color: T.bg, background: T.ink, letterSpacing: "0.12em", textTransform: "uppercase", display: "flex", alignItems: "center" }}>
+            Subscribe →
+          </button>
+        </form>
+      )}
+    </section>
+  );
+}
+
+window.NewsletterCard = NewsletterCard;
+</script>
+
+<!-- App -->
+<script type="text/babel" data-presets="react">
+const { useState, useMemo, useEffect, useRef } = React;
+
+const TWEAK_DEFAULTS = {
+  "theme": "paper",
+  "view": "index",
+  "density": "cozy",
+  "showCover": true
+};
+
+function App() {
+  const [tweaks, setTweak] = (window.useTweaks || (() => [TWEAK_DEFAULTS, () => {}]))(TWEAK_DEFAULTS);
+  const T = window.THEMES[tweaks.theme] || window.THEMES.paper;
+
+  const [query, setQuery] = useState("");
+  const [activeCat, setActiveCat] = useState("ALL");
+  const [sort, setSort] = useState("recent");
+  const [open, setOpen] = useState(null);
+
+  useEffect(() => {
+    document.body.style.background = T.bg;
+    document.body.style.color = T.ink;
+  }, [tweaks.theme]);
+
+  const filtered = useMemo(() => {
+    let list = window.ENTRIES.slice();
+    if (activeCat !== "ALL") list = list.filter((e) => e.cat === activeCat);
+    if (query.trim()) {
+      const q = query.toLowerCase();
+      list = list.filter((e) =>
+        e.title.toLowerCase().includes(q) ||
+        e.short.toLowerCase().includes(q) ||
+        (e.body || "").toLowerCase().includes(q) ||
+        e.id.toLowerCase().includes(q) ||
+        (e.tags || []).some((t) => t.toLowerCase().includes(q))
+      );
+    }
+    if (sort === "az") list.sort((a, b) => a.title.localeCompare(b.title));
+    else if (sort === "id") list.sort((a, b) => a.id.localeCompare(b.id));
+    else list.sort((a, b) => (b.year || 0) - (a.year || 0));
+    return list;
+  }, [activeCat, query, sort]);
+
+  const byCat = useMemo(() => {
+    const c = {};
+    window.ENTRIES.forEach((e) => { c[e.cat] = (c[e.cat] || 0) + 1; });
+    return c;
+  }, []);
+
+  const onJump = (cat) => {
+    setActiveCat(cat);
+    window.scrollTo({ top: window.innerHeight * 0.6, behavior: "smooth" });
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: T.bg, color: T.ink }}>
+      <header style={{
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        padding: "14px 48px",
+        borderBottom: `1px solid ${T.ink15}`,
+        background: T.bg,
+        gap: 24, flexWrap: "wrap",
+      }}>
+        <div className="mono" style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: T.ink70, display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
+          <span style={{ color: T.ink, fontSize: 11 }}>Klasa, P.</span>
+          <span style={{ color: T.ink15 }}>│</span>
+          <span style={{ color: T.ink40 }}>Founder</span>
+          <a href="https://scoraq.com/info" target="_blank" style={{ color: T.accent, textDecoration: "none", fontWeight: 500, letterSpacing: "0.06em" }}>Scoraq ↗</a>
+          <span style={{ color: T.ink15 }}>│</span>
+          <span style={{ color: T.ink40 }}>Sr. Designer, Hazelcast</span>
+        </div>
+        <div className="mono" style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: T.ink70, display: "flex", gap: 18, alignItems: "center" }}>
+          <a href="https://github.com/pawelklasa" target="_blank" style={{ color: T.ink70, textDecoration: "none" }}>GitHub ↗</a>
+          <a href="https://medium.com/@pawel.klasa" target="_blank" style={{ color: T.ink70, textDecoration: "none" }}>Medium ↗</a>
+          <a href="https://pavka.design" target="_blank" style={{ color: T.ink70, textDecoration: "none" }}>pavka.design ↗</a>
+          <span style={{ color: T.ink15 }}>│</span>
+          <a href="mailto:hello@pavka.design" style={{ color: T.ink, textDecoration: "none" }}>hello@pavka.design</a>
+        </div>
+      </header>
+
+      {tweaks.showCover && (
+        <window.Cover theme={tweaks.theme} total={window.ENTRIES.length} byCat={byCat} onJump={onJump} />
+      )}
+
+      {tweaks.showCover && window.NewsletterCard && (
+        <window.NewsletterCard theme={tweaks.theme} variant="band" />
+      )}
+
+      <window.Controls
+        theme={tweaks.theme}
+        query={query} setQuery={setQuery}
+        activeCat={activeCat} setActiveCat={setActiveCat}
+        view={tweaks.view} setView={(v) => setTweak("view", v)}
+        sort={sort} setSort={setSort}
+        total={window.ENTRIES.length} shown={filtered.length}
+      />
+
+      {activeCat !== "ALL" && activeCat !== "FEED" && (
+        <div style={{ padding: "32px 48px 8px", borderBottom: `1px solid ${T.ink08}` }}>
+          <div className="mono" style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: T.accent, marginBottom: 8 }}>
+            § {activeCat}
+          </div>
+          <div style={{ fontFamily: "'Inter Tight', sans-serif", fontSize: 32, letterSpacing: "-0.02em", color: T.ink }}>
+            {window.CATS[activeCat].label}
+          </div>
+          <div className="serif" style={{ fontStyle: "italic", color: T.ink70, marginTop: 6, fontSize: 15 }}>
+            {window.CATS[activeCat].desc}
+          </div>
+        </div>
+      )}
+
+      {activeCat === "FEED" && window.ContributionGraph && (
+        <div style={{ padding: "40px 48px 56px", borderBottom: `1px solid ${T.ink15}` }}>
+          <window.ContributionGraph theme={tweaks.theme} />
+        </div>
+      )}
+
+      {filtered.length === 0 ? (
+        <div style={{ padding: "120px 48px", textAlign: "center", color: T.ink40 }} className="mono">
+          <div style={{ fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+            no records · ({String(filtered.length).padStart(3, "0")} ⁄ {String(window.ENTRIES.length).padStart(3, "0")})
+          </div>
+        </div>
+      ) : tweaks.view === "card" ? (
+        <window.CardView entries={filtered} theme={tweaks.theme} onOpen={setOpen} />
+      ) : tweaks.view === "table" ? (
+        <window.TableView entries={filtered} theme={tweaks.theme} onOpen={setOpen} />
+      ) : (
+        <window.IndexView entries={filtered} theme={tweaks.theme} onOpen={setOpen} density={tweaks.density} />
+      )}
+
+      <footer style={{
+        marginTop: 80,
+        borderTop: `1px solid ${T.ink15}`,
+        padding: "40px 48px 60px",
+        display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 32,
+      }}>
+        <div className="mono" style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: T.ink40, lineHeight: 1.8 }}>
+          <div style={{ color: T.ink, marginBottom: 4 }}>Colophon</div>
+          Set in Inter Tight &amp; JetBrains Mono.<br />
+          Body text in Source Serif 4.<br />
+          Composed in HTML.
+        </div>
+        <div className="mono" style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: T.ink40, lineHeight: 1.8 }}>
+          <div style={{ color: T.ink, marginBottom: 4 }}>Terms</div>
+          All entries CC BY-SA 4.0.<br />
+          Tools as marked, mostly MIT.<br />
+          Contact for commercial work.
+        </div>
+        <div className="mono" style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: T.ink40, lineHeight: 1.8, textAlign: "right" }}>
+          <div style={{ color: T.ink, marginBottom: 4 }}>Errata</div>
+          Last revised Apr 2026.<br />
+          Maintained by the author.<br />
+          <span style={{ color: T.accent }}>Always in print.</span>
+        </div>
+      </footer>
+
+      <window.Detail entry={open} theme={tweaks.theme} onClose={() => setOpen(null)} allEntries={filtered} />
+
+      {window.TweaksPanel && (
+        <window.TweaksPanel title="Tweaks">
+          <window.TweakSection title="Display">
+            <window.TweakSelect label="Theme" value={tweaks.theme} onChange={(v) => setTweak("theme", v)}
+              options={[["paper", "Paper · cool blue"], ["sage", "Sage"], ["blush", "Blush"], ["ochre", "Ochre"], ["cream", "Cream"], ["ink", "Ink · dark"], ["blueprint", "Blueprint"]]} />
+            <window.TweakRadio label="View" value={tweaks.view} onChange={(v) => setTweak("view", v)}
+              options={[["index", "Index"], ["card", "Cards"], ["table", "Table"]]} />
+            <window.TweakRadio label="Density" value={tweaks.density} onChange={(v) => setTweak("density", v)}
+              options={[["compact", "Compact"], ["cozy", "Cozy"], ["archival", "Archival"]]} />
+            <window.TweakToggle label="Show cover & manifesto" value={tweaks.showCover} onChange={(v) => setTweak("showCover", v)} />
+          </window.TweakSection>
+        </window.TweaksPanel>
+      )}
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
+</script>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>A Public Catalogue — Klasa, P.</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,wght@0,400;1,400&display=swap" />
+
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter Tight', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    background: #eaeef2;
+    color: #0d1117;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; font-feature-settings: "ss01"; }
+  .serif { font-family: 'Source Serif 4', Georgia, serif; }
+
+  button { font-family: inherit; }
+  input::placeholder { color: rgba(14,14,13,0.3); }
+
+  .entryrow:hover, .cardcell:hover, .trow:hover {
+    background: rgba(14,14,13,0.025);
+  }
+  .indexcell:hover {
+    background: rgba(14,14,13,0.04);
+  }
+
+  @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slidein { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+  /* selection */
+  ::selection { background: #1f4380; color: #eaeef2; }
+
+  /* scrollbar — keep it discrete */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: rgba(14,14,13,0.2); }
+  ::-webkit-scrollbar-track { background: transparent; }
+
+  /* Theme-driven body bg via JS */
+</style>
+</head>
+<body>
+  <div id="root"></div>
+
+<script type="application/json" id="speaker-notes">[]</script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="data.jsx"></script>
+<script type="text/babel" src="chrome.jsx"></script>
+<script type="text/babel" src="views.jsx"></script>
+<script type="text/babel" src="contribgraph.jsx"></script>
+<script type="text/babel" src="newsletter.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useMemo, useEffect, useRef } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "paper",
+  "view": "index",
+  "density": "cozy",
+  "showCover": true
+}/*EDITMODE-END*/;
+
+function App() {
+  const [tweaks, setTweak] = (window.useTweaks || (() => [TWEAK_DEFAULTS, () => {}]))(TWEAK_DEFAULTS);
+  const T = window.THEMES[tweaks.theme] || window.THEMES.paper;
+
+  const [query, setQuery] = useState("");
+  const [activeCat, setActiveCat] = useState("ALL");
+  const [sort, setSort] = useState("recent");
+  const [open, setOpen] = useState(null);
+
+  // Apply theme to body for sticky bg matching
+  useEffect(() => {
+    document.body.style.background = T.bg;
+    document.body.style.color = T.ink;
+  }, [tweaks.theme]);
+
+  const filtered = useMemo(() => {
+    let list = window.ENTRIES.slice();
+    if (activeCat !== "ALL") list = list.filter((e) => e.cat === activeCat);
+    if (query.trim()) {
+      const q = query.toLowerCase();
+      list = list.filter((e) => {
+        return (
+          e.title.toLowerCase().includes(q) ||
+          e.short.toLowerCase().includes(q) ||
+          (e.body || "").toLowerCase().includes(q) ||
+          e.id.toLowerCase().includes(q) ||
+          (e.tags || []).some((t) => t.toLowerCase().includes(q))
+        );
+      });
+    }
+    if (sort === "az") list.sort((a, b) => a.title.localeCompare(b.title));
+    else if (sort === "id") list.sort((a, b) => a.id.localeCompare(b.id));
+    else list.sort((a, b) => (b.year || 0) - (a.year || 0));
+    return list;
+  }, [activeCat, query, sort]);
+
+  const byCat = useMemo(() => {
+    const c = {};
+    window.ENTRIES.forEach((e) => { c[e.cat] = (c[e.cat] || 0) + 1; });
+    return c;
+  }, []);
+
+  const onJump = (cat) => {
+    setActiveCat(cat);
+    window.scrollTo({ top: window.innerHeight * 0.6, behavior: "smooth" });
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: T.bg, color: T.ink }}>
+      {/* Top bar — byline + role + links */}
+      <header style={{
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        padding: "14px 48px",
+        borderBottom: `1px solid ${T.ink15}`,
+        background: T.bg,
+        gap: 24, flexWrap: "wrap",
+      }}>
+        <div className="mono" style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: T.ink70, display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
+          <span style={{ color: T.ink, fontSize: 11 }}>Klasa, P.</span>
+          <span style={{ color: T.ink15 }}>│</span>
+          <span style={{ color: T.ink40 }}>Founder</span>
+          <a href="https://scoraq.com/info" target="_blank" style={{ color: T.accent, textDecoration: "none", fontWeight: 500, letterSpacing: "0.06em" }}>Scoraq ↗</a>
+          <span style={{ color: T.ink15 }}>│</span>
+          <span style={{ color: T.ink40 }}>Sr. Designer, Hazelcast</span>
+        </div>
+        <div className="mono" style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: T.ink70, display: "flex", gap: 18, alignItems: "center" }}>
+          <a href="https://github.com/pawelklasa" target="_blank" style={{ color: T.ink70, textDecoration: "none" }}>GitHub ↗</a>
+          <a href="https://medium.com/@pawel.klasa" target="_blank" style={{ color: T.ink70, textDecoration: "none" }}>Medium ↗</a>
+          <a href="https://pavka.design" target="_blank" style={{ color: T.ink70, textDecoration: "none" }}>pavka.design ↗</a>
+          <span style={{ color: T.ink15 }}>│</span>
+          <a href="mailto:hello@pavka.design" style={{ color: T.ink, textDecoration: "none" }}>hello@pavka.design</a>
+        </div>
+      </header>
+
+      {tweaks.showCover && (
+        <window.Cover theme={tweaks.theme} total={window.ENTRIES.length} byCat={byCat} onJump={onJump} />
+      )}
+
+      {tweaks.showCover && window.NewsletterCard && (
+        <window.NewsletterCard theme={tweaks.theme} variant="band" />
+      )}
+
+      <window.Controls
+        theme={tweaks.theme}
+        query={query} setQuery={setQuery}
+        activeCat={activeCat} setActiveCat={setActiveCat}
+        view={tweaks.view} setView={(v) => setTweak("view", v)}
+        sort={sort} setSort={setSort}
+        total={window.ENTRIES.length} shown={filtered.length}
+      />
+
+      {/* Section heading — when filtered to a category */}
+      {activeCat !== "ALL" && activeCat !== "FEED" && (
+        <div style={{ padding: "32px 48px 8px", borderBottom: `1px solid ${T.ink08}` }}>
+          <div className="mono" style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: T.accent, marginBottom: 8 }}>
+            § {activeCat}
+          </div>
+          <div style={{ fontFamily: "'Inter Tight', sans-serif", fontSize: 32, letterSpacing: "-0.02em", color: T.ink }}>
+            {window.CATS[activeCat].label}
+          </div>
+          <div className="serif" style={{ fontStyle: "italic", color: T.ink70, marginTop: 6, fontSize: 15 }}>
+            {window.CATS[activeCat].desc}
+          </div>
+        </div>
+      )}
+
+      {/* FEED panel — contribution graph + recent events */}
+      {activeCat === "FEED" && window.ContributionGraph && (
+        <div style={{ padding: "40px 48px 56px", borderBottom: `1px solid ${T.ink15}` }}>
+          <window.ContributionGraph theme={tweaks.theme} />
+        </div>
+      )}
+
+      {/* Body */}
+      {filtered.length === 0 ? (
+        <div style={{ padding: "120px 48px", textAlign: "center", color: T.ink40 }} className="mono">
+          <div style={{ fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+            no records · ({String(filtered.length).padStart(3, "0")} ⁄ {String(window.ENTRIES.length).padStart(3, "0")})
+          </div>
+        </div>
+      ) : tweaks.view === "card" ? (
+        <window.CardView entries={filtered} theme={tweaks.theme} onOpen={setOpen} />
+      ) : tweaks.view === "table" ? (
+        <window.TableView entries={filtered} theme={tweaks.theme} onOpen={setOpen} />
+      ) : (
+        <window.IndexView entries={filtered} theme={tweaks.theme} onOpen={setOpen} density={tweaks.density} />
+      )}
+
+      {/* Colophon footer */}
+      <footer style={{
+        marginTop: 80,
+        borderTop: `1px solid ${T.ink15}`,
+        padding: "40px 48px 60px",
+        display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 32,
+      }}>
+        <div className="mono" style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: T.ink40, lineHeight: 1.8 }}>
+          <div style={{ color: T.ink, marginBottom: 4 }}>Colophon</div>
+          Set in Inter Tight & JetBrains Mono.<br />
+          Body text in Source Serif 4.<br />
+          Composed in HTML.
+        </div>
+        <div className="mono" style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: T.ink40, lineHeight: 1.8 }}>
+          <div style={{ color: T.ink, marginBottom: 4 }}>Terms</div>
+          All entries CC BY-SA 4.0.<br />
+          Tools as marked, mostly MIT.<br />
+          Contact for commercial work.
+        </div>
+        <div className="mono" style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: T.ink40, lineHeight: 1.8, textAlign: "right" }}>
+          <div style={{ color: T.ink, marginBottom: 4 }}>Errata</div>
+          Last revised Apr 2026.<br />
+          Maintained by the author.<br />
+          <span style={{ color: T.accent }}>Always in print.</span>
+        </div>
+      </footer>
+
+      <window.Detail entry={open} theme={tweaks.theme} onClose={() => setOpen(null)} allEntries={filtered} />
+
+      {/* Tweaks panel */}
+      {window.TweaksPanel && (
+        <window.TweaksPanel title="Tweaks">
+          <window.TweakSection title="Display">
+            <window.TweakSelect label="Theme" value={tweaks.theme} onChange={(v) => setTweak("theme", v)}
+              options={[["paper", "Paper · cool blue"], ["sage", "Sage"], ["blush", "Blush"], ["ochre", "Ochre"], ["cream", "Cream"], ["ink", "Ink · dark"], ["blueprint", "Blueprint"]]} />
+            <window.TweakRadio label="View" value={tweaks.view} onChange={(v) => setTweak("view", v)}
+              options={[["index", "Index"], ["card", "Cards"], ["table", "Table"]]} />
+            <window.TweakRadio label="Density" value={tweaks.density} onChange={(v) => setTweak("density", v)}
+              options={[["compact", "Compact"], ["cozy", "Cozy"], ["archival", "Archival"]]} />
+            <window.TweakToggle label="Show cover & manifesto" value={tweaks.showCover} onChange={(v) => setTweak("showCover", v)} />
+          </window.TweakSection>
+        </window.TweaksPanel>
+      )}
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
+</script>
+</body>
+</html>
