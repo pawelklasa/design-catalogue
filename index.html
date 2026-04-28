@@ -38,6 +38,75 @@
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-thumb { background: rgba(14,14,13,0.2); }
   ::-webkit-scrollbar-track { background: transparent; }
+
+  /* Medium article body — keep imported HTML readable inside the detail view */
+  .medium-body p { margin: 0 0 1.1em; }
+  .medium-body h1, .medium-body h2, .medium-body h3, .medium-body h4 {
+    font-family: 'Inter Tight', sans-serif;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    margin: 1.6em 0 0.5em;
+    line-height: 1.2;
+  }
+  .medium-body h3 { font-size: 22px; }
+  .medium-body h4 { font-size: 18px; }
+  .medium-body a { color: #1f4380; text-decoration: underline; text-underline-offset: 2px; }
+  .medium-body blockquote {
+    margin: 1.2em 0;
+    padding: 0.2em 0 0.2em 1em;
+    border-left: 2px solid rgba(14,14,13,0.25);
+    color: rgba(14,14,13,0.7);
+    font-style: italic;
+  }
+  .medium-body figure {
+    margin: 1.6em 0;
+    /* Allow figures to extend past the 580px reading column */
+    max-width: 760px;
+    width: 100%;
+  }
+  .medium-body img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    border-radius: 4px;
+  }
+  .medium-body figcaption {
+    margin-top: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(14,14,13,0.55);
+    letter-spacing: 0.02em;
+    text-align: center;
+  }
+  .medium-body pre {
+    background: rgba(14,14,13,0.06);
+    padding: 14px 16px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .medium-body code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9em;
+    background: rgba(14,14,13,0.06);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  .medium-body pre code { background: transparent; padding: 0; }
+  .medium-body ul, .medium-body ol { padding-left: 1.4em; margin: 0 0 1.1em; }
+  .medium-body li { margin-bottom: 0.4em; }
+  .medium-body hr {
+    border: none;
+    border-top: 1px solid rgba(14,14,13,0.15);
+    margin: 2em 0;
+  }
+  .medium-body iframe {
+    max-width: 100%;
+    border: 0;
+  }
 </style>
 </head>
 <body>

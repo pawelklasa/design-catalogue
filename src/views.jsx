@@ -226,7 +226,7 @@ function Detail({ entry, theme, onClose, allEntries }) {
           </p>
 
           {/* Body */}
-          <div className="serif" style={{ fontSize: 16, lineHeight: 1.55, color: T.ink, marginBottom: 40, maxWidth: 580 }}>
+          <div className="serif medium-body" style={{ fontSize: 16, lineHeight: 1.55, color: T.ink, marginBottom: 40, maxWidth: 580 }}>
             {entry.source === "medium" && entry.body
               ? <div dangerouslySetInnerHTML={{ __html: entry.body }} />
               : entry.body}

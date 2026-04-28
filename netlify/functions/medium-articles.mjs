@@ -82,6 +82,17 @@ function parseFeed(xml) {
     const idMatch = guid.match(/\/p\/([a-f0-9]+)/i);
     const shortId = idMatch ? idMatch[1] : guid.replace(/[^a-z0-9]/gi, "").slice(-12);
 
+    // Build short and a body that doesn't duplicate it
+    const short = shortFromContent(content || description);
+    let body = content;
+    if (body && short) {
+      // Strip leading <h3>/<h4>/<p> if its plain-text content equals the short
+      body = body.replace(
+        /^\s*<(h[1-6]|p)[^>]*>([\s\S]*?)<\/\1>\s*/i,
+        (full, _tag, inner) => (stripHtml(inner) === short ? "" : full)
+      );
+    }
+
     items.push({
       id: `MED-${shortId}`,
       cat: "WRITING",
@@ -90,9 +101,9 @@ function parseFeed(xml) {
       dateLabel: date ? date.toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" }) : "",
       status: "published",
       title,
-      short: shortFromContent(content || description),
+      short,
       tags,
-      body: content,           // full HTML — used by Detail view
+      body,                    // full HTML — used by Detail view
       refs: [link],
       link,                    // canonical Medium URL
       source: "medium",
