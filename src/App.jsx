@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useEntries } from "./useEntries.js";
 import { useGithubContributions } from "./useGithubContributions.js";
+import { useMediumArticles } from "./useMediumArticles.js";
 
 const TWEAK_DEFAULTS = {
   theme: "paper",
@@ -18,8 +19,17 @@ export default function App() {
   const [sort, setSort] = useState("recent");
   const [open, setOpen] = useState(null);
 
-  const { entries: allEntries } = useEntries();
+  const { entries: rawEntries } = useEntries();
   const { data: ghData } = useGithubContributions();
+  const { articles: mediumArticles } = useMediumArticles();
+
+  // Merge live Medium articles into the catalogue: replace any bundled
+  // WRITING entries with the live feed when it's available.
+  const allEntries = useMemo(() => {
+    if (!mediumArticles || mediumArticles.length === 0) return rawEntries;
+    const nonWriting = rawEntries.filter((e) => e.cat !== "WRITING");
+    return [...nonWriting, ...mediumArticles];
+  }, [rawEntries, mediumArticles]);
 
   useEffect(() => {
     document.body.style.background = T.bg;

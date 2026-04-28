@@ -227,7 +227,9 @@ function Detail({ entry, theme, onClose, allEntries }) {
 
           {/* Body */}
           <div className="serif" style={{ fontSize: 16, lineHeight: 1.55, color: T.ink, marginBottom: 40, maxWidth: 580 }}>
-            {entry.body}
+            {entry.source === "medium" && entry.body
+              ? <div dangerouslySetInnerHTML={{ __html: entry.body }} />
+              : entry.body}
           </div>
 
           {/* Metadata table */}
@@ -240,7 +242,21 @@ function Detail({ entry, theme, onClose, allEntries }) {
               entry.role && ["Role", entry.role],
               entry.tags && ["Tags", entry.tags.join(" · ")],
               entry.metrics && ["Metrics", entry.metrics.map(([k, v]) => `${k}: ${v}`).join("  /  ")],
-              entry.refs && ["References", entry.refs.join("  /  ")],
+              entry.refs && ["References", (
+                <span>
+                  {entry.refs.map((r, i) => {
+                    const isUrl = /^https?:\/\//i.test(r);
+                    return (
+                      <React.Fragment key={i}>
+                        {i > 0 && "  /  "}
+                        {isUrl
+                          ? <a href={r} target="_blank" rel="noopener noreferrer" style={{ color: T.accent, textDecoration: "underline" }}>{r}</a>
+                          : r}
+                      </React.Fragment>
+                    );
+                  })}
+                </span>
+              )],
               entry.download && ["File", `${entry.download} (${entry.size})`],
             ].filter(Boolean).map(([k, v]) => (
               <React.Fragment key={k}>
