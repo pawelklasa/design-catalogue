@@ -91,7 +91,7 @@ const CATS = {
 // ============================================================
 // COVER — manifesto + live feed graph + index summary
 // ============================================================
-function Cover({ theme, total, byCat, onJump }) {
+function Cover({ theme, total, byCat, onJump, ghData }) {
   const T = THEMES[theme];
   return (
     <section style={{ borderBottom: `1px solid ${T.ink15}` }}>
@@ -110,7 +110,7 @@ function Cover({ theme, total, byCat, onJump }) {
           </div>
         </div>
         <div style={{ paddingTop: 6, minWidth: 0, overflowX: "auto" }}>
-          {window.ContributionGraph && <window.ContributionGraph theme={theme} compact={true} />}
+          {window.ContributionGraph && <window.ContributionGraph theme={theme} compact={true} data={ghData} />}
         </div>
       </div>
 

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useEntries } from "./useEntries.js";
+import { useGithubContributions } from "./useGithubContributions.js";
 
 const TWEAK_DEFAULTS = {
   theme: "paper",
@@ -18,6 +19,7 @@ export default function App() {
   const [open, setOpen] = useState(null);
 
   const { entries: allEntries } = useEntries();
+  const { data: ghData } = useGithubContributions();
 
   useEffect(() => {
     document.body.style.background = T.bg;
@@ -97,7 +99,7 @@ export default function App() {
       </header>
 
       {tweaks.showCover && Cover && (
-        <Cover theme={tweaks.theme} total={allEntries.length} byCat={byCat} onJump={onJump} />
+        <Cover theme={tweaks.theme} total={allEntries.length} byCat={byCat} onJump={onJump} ghData={ghData} />
       )}
 
       {tweaks.showCover && NewsletterCard && (
@@ -129,7 +131,7 @@ export default function App() {
 
       {activeCat === "FEED" && ContributionGraph && (
         <div style={{ padding: "40px 48px 56px", borderBottom: `1px solid ${T.ink15}` }}>
-          <ContributionGraph theme={tweaks.theme} />
+          <ContributionGraph theme={tweaks.theme} data={ghData} />
         </div>
       )}
 

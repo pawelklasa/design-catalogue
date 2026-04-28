@@ -81,7 +81,7 @@ function ContribCell({ level, T, count, date }) {
   );
 }
 
-function ContributionGraph({ theme, compact }) {
+function ContributionGraph({ theme, compact, data }) {
   const T = window.THEMES[theme];
   // Override the contrib ramp per theme
   const ramps = {
@@ -95,22 +95,29 @@ function ContributionGraph({ theme, compact }) {
   };
   const Tx = { ...T, contribLevels: ramps[theme] || ramps.paper };
 
-  const totalContribs = CONTRIB_DATA.flat().reduce((sum, c) => sum + (c?.count || 0), 0);
-  const activeDays = CONTRIB_DATA.flat().filter((c) => c && c.count > 0).length;
+  // Use live data when available, otherwise fall back to the seeded mock.
+  const cells = data?.weeks ?? CONTRIB_DATA;
+  const events = data?.recentEvents ?? RECENT_EVENTS;
+  const isLive = !!data;
+
+  const totalContribs = data?.totalContributions
+    ?? cells.flat().reduce((sum, c) => sum + (c?.count || 0), 0);
+  const activeDays = cells.flat().filter((c) => c && c.count > 0).length;
   const longestStreak = (() => {
     let max = 0, cur = 0;
-    for (const w of CONTRIB_DATA) for (const c of w) {
+    for (const w of cells) for (const c of w) {
       if (!c) continue;
       if (c.count > 0) { cur++; max = Math.max(max, cur); } else cur = 0;
     }
     return max;
   })();
+  const publicRepos = data?.publicRepos ?? 101;
 
   // Month labels: detect when a new month starts at top row of week
   const monthLabels = [];
   let lastMonth = -1;
-  for (let w = 0; w < CONTRIB_DATA.length; w++) {
-    const firstDay = CONTRIB_DATA[w].find(Boolean);
+  for (let w = 0; w < cells.length; w++) {
+    const firstDay = cells[w].find(Boolean);
     if (!firstDay) continue;
     const m = firstDay.date.getMonth();
     if (m !== lastMonth && firstDay.date.getDate() <= 7) {
@@ -127,7 +134,7 @@ function ContributionGraph({ theme, compact }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 24 }}>
         <div>
           <div className="mono" style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: T.accent, marginBottom: 6 }}>
-            § FEED · Live
+            § FEED · {isLive ? "Live" : "Cached"}
           </div>
           <div style={{ fontFamily: "'Inter Tight', sans-serif", fontSize: 32, letterSpacing: "-0.02em", color: T.ink }}>
             <span className="mono" style={{ fontSize: 24, color: T.ink, letterSpacing: "0.02em" }}>{totalContribs.toLocaleString()}</span>
@@ -143,7 +150,7 @@ function ContributionGraph({ theme, compact }) {
           <span style={{ color: T.ink40 }}>Longest streak</span>
           <span style={{ color: T.ink, fontSize: 12, justifySelf: "end" }}>{longestStreak} days</span>
           <span style={{ color: T.ink40 }}>Public repos</span>
-          <span style={{ color: T.ink, fontSize: 12, justifySelf: "end" }}>101</span>
+          <span style={{ color: T.ink, fontSize: 12, justifySelf: "end" }}>{publicRepos}</span>
         </div>
       </div>
 
@@ -171,7 +178,7 @@ function ContributionGraph({ theme, compact }) {
             ))}
           </div>
           <div style={{ display: "flex", gap: 2 }}>
-            {CONTRIB_DATA.map((week, w) => (
+            {cells.map((week, w) => (
               <div key={w} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 {week.map((cell, d) => (
                   <ContribCell
@@ -204,7 +211,7 @@ function ContributionGraph({ theme, compact }) {
           Recent activity
         </div>
         <div>
-          {RECENT_EVENTS.map((ev, i) => (
+          {events.map((ev, i) => (
             <div key={i} style={{
               display: "grid",
               gridTemplateColumns: "120px 240px 140px 1fr",
@@ -214,7 +221,7 @@ function ContributionGraph({ theme, compact }) {
               alignItems: "baseline",
             }}>
               <span className="mono" style={{ fontSize: 10, color: T.ink40, letterSpacing: "0.06em", textTransform: "uppercase" }}>{ev.when}</span>
-              <a href={`https://github.com/${ev.repo}`} target="_blank" className="mono" style={{ fontSize: 11, color: T.ink, letterSpacing: "0.02em", textDecoration: "none" }}>{ev.repo}</a>
+              <a href={`https://github.com/${ev.repo}`} target="_blank" rel="noreferrer" className="mono" style={{ fontSize: 11, color: T.ink, letterSpacing: "0.02em", textDecoration: "none" }}>{ev.repo}</a>
               <span className="mono" style={{ fontSize: 10, color: T.accent, letterSpacing: "0.06em", textTransform: "uppercase" }}>{ev.action}</span>
               <span style={{ fontSize: 13, color: T.ink70 }}>{ev.detail}</span>
             </div>
