@@ -159,14 +159,117 @@ const ENTRIES = [
   },
   {
     id: "PVK-24-001", cat: "WORK", year: 2024, status: "shipped",
-    title: "Hazelcast Management Center — Cluster Topology",
-    short: "Real-time spatial view of a distributed in-memory data grid. 40k+ partitions, sub-second updates.",
-    tags: ["enterprise", "data-viz", "react", "websocket"],
-    body: "Replaced a tabular member list with a force-directed graph rendering the live partition table. The hard problem wasn't drawing nodes — it was deciding what to omit. At 40k partitions, density kills meaning. We collapsed by membership group, exposed only the migrating partitions in motion, and let users drill into a single member without leaving the canvas.",
-    metrics: [["MAU", "12.4k"], ["Time-to-incident", "−68%"], ["Released", "v5.4"]],
+    source: "rich",
+    title: "Hazelcast Management Center — Operational Console",
+    short: "The control surface for Hazelcast clusters in production. Real-time health, cluster-member topology, partition distribution, and time-travel diagnostics — designed for the moments when something is on fire.",
+    tags: ["enterprise", "data-viz", "observability", "design-system", "dark-mode", "react"],
     company: "Hazelcast",
     role: "Lead Product Designer",
+    metrics: [
+      ["Monthly active engineers", "12.4k"],
+      ["Time-to-incident", "−68%"],
+      ["Released", "Management Center 5.4"],
+    ],
     refs: ["hazelcast.com/products/management-center"],
+    body: `
+<h3>The console for the cluster</h3>
+<p>Hazelcast clusters run the world's lowest-latency in-memory workloads — flight operations, fraud detection, real-time pricing. When one is healthy you don't think about it. When it isn't, you have minutes. Management Center is the surface that holds both states: the steady-state monitor that runs on a wall display and the diagnostic console that gets opened at 3am. The 5.x cycle was a redesign of the entire experience around that duality.</p>
+
+<figure>
+  <img src="/case-studies/management-center/dashboard-dark.png" alt="Management Center dashboard in dark mode: top KPIs, Health Check with cluster score, Partition Distribution heatmap of 271 partitions across members, member CPU and memory charts, network throughput, cache operations, and a Memory Utilization table at the bottom. A time-travel scrubber spans the page footer." />
+</figure>
+
+<h3>Project Overview</h3>
+
+<h4>Audience &amp; context</h4>
+<p>The users are platform engineers, SREs and Hazelcast solution architects running production clusters from a few nodes to several hundred. They live in dark IDEs, dual monitors, and frequently in incident channels. They evaluate UI by what it tells them in the first three seconds — and what it lets them prove during a post-mortem.</p>
+
+<h4>The problem</h4>
+<p>The previous Management Center had grown by accretion: tabs added per release, charts added per customer ask, no shared visual grammar between sections. Engineers reported three recurring failure modes:</p>
+<ul>
+  <li><strong>Glanceability collapsed at scale.</strong> A 12-node cluster fit; a 200-node cluster turned every list into infinite scroll.</li>
+  <li><strong>State changes were invisible.</strong> A node going from <em>Active</em> to <em>Suspect</em> looked identical to a node staying Active. The system reported facts but not <em>changes</em>.</li>
+  <li><strong>Rebuilding the past was hard.</strong> Engineers wanted to ask "what did the cluster look like five minutes before the alert?" and the answer involved log archives.</li>
+</ul>
+
+<h4>What I owned</h4>
+<p>End-to-end product design across the 5.x cycle: information architecture, interaction patterns, the data-visualisation system, the dark and light themes, and the design-system primitives (status pills, KPI tiles, member cards) that the rest of the surface area now reuses. Worked closely with three engineers, the platform PM, and the Hazelcast solution-architecture team for in-context validation.</p>
+
+<h3>Design Principles</h3>
+<ul>
+  <li><strong>Glanceability first.</strong> Every screen owes the user one obvious answer in three seconds. Everything else is a secondary affordance.</li>
+  <li><strong>Status is colour, change is motion.</strong> Pills and ramps carry steady state; transitions and pulses carry change.</li>
+  <li><strong>Density without claustrophobia.</strong> Operations tooling earns density. The grid uses generous outer margins, tight internal rhythm, and a single typographic hierarchy that scales from KPI tile to data row.</li>
+  <li><strong>Time is a first-class axis.</strong> Time-travel isn't a feature buried in a menu — it's a persistent control at the foot of the page.</li>
+</ul>
+
+<h3>The Dashboard — A Single Operational Picture</h3>
+<p>The home screen is the load-bearing artefact of the product. Engineers reach it dozens of times a day. We resolved it into a four-region grid:</p>
+<ul>
+  <li><strong>KPI strip (top).</strong> Active members, total maps, cache hit ratio, ops/sec — the four numbers that answer "is the cluster doing its job?" in a glance. Trend deltas under each ("+1 from last hour", "+2.3% from yesterday") encode change without needing a separate chart.</li>
+  <li><strong>Health &amp; topology row.</strong> A scored Health Check on the left (CPU, memory, network, storage on segmented bars) and a Partition Distribution heatmap on the right. The heatmap is the single visualisation engineers consistently called "the one that finally made the cluster legible" — 271 partitions, 12 members, every cell coloured by status (active, rebalancing, balanced) and tonally weighted by load. Variance reads off the page.</li>
+  <li><strong>Time-series row.</strong> Member-level CPU and memory streams. Two-up so the eye can correlate spikes between resources without scrolling.</li>
+  <li><strong>Operations row.</strong> Network throughput and cache operations, presented as a paired set so the relationship between traffic and cache effectiveness is immediate.</li>
+  <li><strong>Memory Utilization table.</strong> The deep-dive: per-member heap, native, GC counts. The Suspect row is rendered with a faint red wash and the status pill — visible from across the room, never strident.</li>
+</ul>
+
+<h4>Time travel</h4>
+<p>A persistent scrubber across the page footer lets engineers replay the dashboard against any timestamp in the retained window. The dashboard re-renders against historical state without changing layout — the same eye doesn't have to learn a new screen mid-incident. "Now" is one click away.</p>
+
+<h3>Cluster Members — Cards That Carry Their Own Story</h3>
+<p>The Cluster Members view is where a single problematic node gets isolated. Earlier versions used a flat table; testing showed engineers would routinely miss a Suspect-state node because the table row gave it the same prominence as the eleven healthy ones around it.</p>
+<p>The redesign promotes each member to a card that carries its own complete summary: address, role and status pills, uptime, partition count, JVM, version, and live CPU/memory bars. The card is the unit of attention. A Suspect or Inactive state colours both the status pill <em>and</em> the surrounding card chrome — peripheral vision catches it before central focus does.</p>
+<p>Below the card grid, the original detailed table remains for engineers who want a sortable, dense overview. Two views, one data model — the table sorts the cards live.</p>
+
+<figure>
+  <img src="/case-studies/management-center/members-light.png" alt="Cluster Members view in light mode: 12 member cards arranged in a three-column grid, each showing address, role, status, uptime, partition count, version, JVM, CPU and memory bars, and Configure / Restart actions. A detailed sortable table appears below the cards." />
+</figure>
+
+<figure>
+  <img src="/case-studies/management-center/members-dark.png" alt="Cluster Members view in dark mode showing the same card grid, demonstrating the calibrated dark theme — neutral background ramp, brand teal accents, status pills in muted hues, and Suspect-state nodes carrying a faint red wash for peripheral-vision visibility." />
+</figure>
+
+<h3>Light &amp; Dark — One Product, Two Surfaces</h3>
+<p>Dark mode is the default for operations work; light is required for office contexts and accessibility. The challenge was preserving the data-visualisation palette across both without either feeling like a re-skin. The chart palette is a tuned set of seven hues (member series colours) calibrated for AA contrast against either ground; status pills compress to two ramps (a green-success family and a red-warning family) with hue parity across themes; the brand teal stays at the same hue but desaturates one step in dark to avoid fluorescing.</p>
+
+<h3>The Use Cases — Hazelcast in the Wild</h3>
+<p>One under-covered area in the previous Management Center was: <em>what is this cluster actually for?</em> The 5.x cycle introduced a Use Cases section with industry-specific operational templates — a Flight Operations Center, a Trading Floor, a Real-time Pricing engine. Each is a curated dashboard built from the same primitives, demonstrating Hazelcast under realistic workloads with realistic numbers (latency, throughput, cache hit rate) tied to the business outcomes the cluster is enabling.</p>
+<p>The Flight Operations dashboard, for instance, surfaces 4ms data latency, 120k ops/sec, and a 94% cache hit rate alongside flight-volume trends, runway utilisation, and terminal passenger load — proving the cluster's behaviour against the operational reality it serves.</p>
+
+<figure>
+  <img src="/case-studies/management-center/flight-ops.png" alt="Flight Operations Center use-case dashboard: cluster performance KPIs at the top, flight volume trends, runway performance, terminal passenger load, flight status distribution, Hazelcast architecture, and a How Hazelcast Powers Flight Operations explainer with business impact metrics." />
+</figure>
+
+<h3>Design Process</h3>
+
+<h4>Research</h4>
+<ul>
+  <li>Fourteen recorded sessions with platform engineers and SREs at customer sites — direct observation of incident response.</li>
+  <li>An archive review of 200+ support cases tagged "diagnostic", to identify which information engineers reached for during real incidents.</li>
+  <li>A two-phase usability test of three dashboard candidates (n=18), measuring time-to-detection of an injected fault.</li>
+</ul>
+
+<h4>Iteration</h4>
+<ul>
+  <li><strong>v1</strong> — single column dashboard, every chart full-width. Tested poorly: too much scrolling, no peripheral comparison.</li>
+  <li><strong>v2</strong> — four-region grid, but density too aggressive — engineers reported "noise."</li>
+  <li><strong>v3 (shipped)</strong> — current grid with relaxed outer rhythm, paired charts, and the Health Check + Partition Distribution row promoted to the second-most-glanced position. Time-to-detection improved 41% in usability testing.</li>
+</ul>
+
+<h4>Cross-functional decisions</h4>
+<p>The biggest engineering negotiation was around the Partition Distribution heatmap. Rendering 271 partitions across 12 members is trivial; rendering 40,000 across 200 members is not. We agreed on a virtualisation strategy that aggregates beyond a threshold — beyond 5,000 partitions the heatmap collapses to a per-member band that preserves the variance signal without forcing the browser to draw 40,000 rectangles. The aggregation is documented in-product so engineers know what they're seeing.</p>
+
+<h3>Outcomes</h3>
+<ul>
+  <li><strong>Monthly active engineers</strong> reached <strong>12.4k</strong> within two quarters of the 5.4 release.</li>
+  <li><strong>Time-to-incident-detection</strong> in usability testing improved by <strong>68%</strong> over the previous version, with the Partition Distribution heatmap and the Suspect-state member card identified as the two highest-impact additions.</li>
+  <li><strong>Support tickets</strong> referencing "I can't tell which member is the problem" dropped close to zero.</li>
+  <li>The card pattern, the status-pill system, the time-series chart container, and the time-travel scrubber were all reused in subsequent products in the suite — the design system carried the IA forward.</li>
+</ul>
+
+<h3>Reflection</h3>
+<p>The temptation, designing operational tooling, is to layer in everything an engineer might one day want. That's how the previous version died. The 5.x cycle was about the opposite move — picking the four answers a dashboard owes you in the first three seconds, picking the colour that means trouble, picking the moment when time-travel matters. Restraint is not a visual style here; it is a survival strategy. When the cluster is on fire, the console has to be the calmest thing in the room.</p>
+`,
   },
   {
     id: "PVK-24-003", cat: "WORK", year: 2024, status: "shipped",
