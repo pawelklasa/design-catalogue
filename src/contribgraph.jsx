@@ -141,7 +141,7 @@ function ContributionGraph({ theme, compact, data }) {
             {" "}<span style={{ color: T.ink70, fontSize: 22 }}>contributions in the last year</span>
           </div>
           <div className="serif" style={{ fontStyle: "italic", color: T.ink70, marginTop: 6, fontSize: 14 }}>
-            Pulled from <a href="https://github.com/pawelklasa" target="_blank" style={{ color: T.ink70 }}>github.com/pawelklasa</a>. Each square is a day.
+            Pulled from <a href="https://github.com/pawelklasa" target="_blank" style={{ color: T.ink70 }}>github.com/pawelklasa</a>.
           </div>
         </div>
         <div className="mono" style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: T.ink70, textAlign: "right", lineHeight: 1.7, display: "grid", gridTemplateColumns: "auto auto", columnGap: 14, rowGap: 2, justifyContent: "end", alignItems: "baseline" }}>

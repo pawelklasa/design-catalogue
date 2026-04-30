@@ -64,26 +64,32 @@ function NewsletterCard({ theme, variant }) {
   }
 
   // Compact band variant — single-row strip, not a giant section
+  const isMobile = (window.useBreakpoint || (() => false))(768);
+  const isNarrow = (window.useBreakpoint || (() => false))(560);
+  const padX = isNarrow ? 20 : isMobile ? 28 : 48;
   return (
     <section style={{
       borderBottom: `1px solid ${T.ink15}`,
-      padding: "18px 48px",
+      padding: `${isMobile ? 16 : 18}px ${padX}px`,
       display: "flex",
-      alignItems: "center",
-      gap: 32,
+      alignItems: isMobile ? "flex-start" : "center",
+      flexDirection: isMobile ? "column" : "row",
+      gap: isMobile ? 14 : 32,
       flexWrap: "wrap",
       background: T.card,
     }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 14, flex: "1 1 auto", minWidth: 280 }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 14, flex: "1 1 auto", minWidth: 0, flexWrap: "wrap" }}>
         <span className="mono" style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: T.accent, whiteSpace: "nowrap" }}>
           § Newsletter
         </span>
         <span style={{ fontFamily: "'Inter Tight', sans-serif", fontSize: 16, color: T.ink, letterSpacing: "-0.005em" }}>
           A weekly dispatch.
         </span>
-        <span className="serif" style={{ fontSize: 13, color: T.ink70, fontStyle: "italic" }}>
-          New entries, half-finished thoughts. Mondays.
-        </span>
+        {!isMobile && (
+          <span className="serif" style={{ fontSize: 13, color: T.ink70, fontStyle: "italic" }}>
+            New entries, half-finished thoughts. Mondays.
+          </span>
+        )}
       </div>
 
       {submitted ? (
@@ -91,7 +97,7 @@ function NewsletterCard({ theme, variant }) {
           ✓ Subscribed — first issue Monday
         </div>
       ) : (
-        <form onSubmit={onSubmit} style={{ display: "flex", border: `1px solid ${T.ink}`, minWidth: 320 }}>
+        <form onSubmit={onSubmit} style={{ display: "flex", border: `1px solid ${T.ink}`, minWidth: isMobile ? 0 : 320, width: isMobile ? "100%" : "auto" }}>
           <input
             type="email"
             required

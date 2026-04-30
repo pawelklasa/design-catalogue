@@ -36,6 +36,15 @@ export default function App() {
     document.body.style.color = T.ink;
   }, [tweaks.theme, T.bg, T.ink]);
 
+  // Open record from URL hash (e.g. /#/r/MED-7b3fa237077e). Runs whenever the
+  // entry list changes so deep links work even before Firestore/Medium load.
+  useEffect(() => {
+    const m = window.location.hash.match(/^#\/r\/(.+)$/);
+    if (!m) return;
+    const found = allEntries.find((e) => e.id === decodeURIComponent(m[1]));
+    if (found && (!open || open.id !== found.id)) setOpen(found);
+  }, [allEntries]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const filtered = useMemo(() => {
     let list = allEntries.slice();
     if (activeCat !== "ALL") list = list.filter((e) => e.cat === activeCat);
@@ -82,14 +91,22 @@ export default function App() {
   const TweakRadio = window.TweakRadio;
   const TweakToggle = window.TweakToggle;
 
+  const useBp = window.useBreakpoint || (() => false);
+  const isMobile = useBp(768);
+  const isNarrow = useBp(560);
+  const padX = isNarrow ? 20 : isMobile ? 28 : 48;
+
   return (
     <div style={{ minHeight: "100vh", background: T.bg, color: T.ink }}>
       <header style={{
-        display: "flex", justifyContent: "space-between", alignItems: "center",
-        padding: "14px 48px",
+        display: "flex",
+        flexDirection: isMobile ? "column" : "row",
+        justifyContent: "space-between",
+        alignItems: isMobile ? "flex-start" : "center",
+        padding: `${isMobile ? 16 : 14}px ${padX}px`,
         borderBottom: `1px solid ${T.ink15}`,
         background: T.bg,
-        gap: 24, flexWrap: "wrap",
+        gap: isMobile ? 10 : 24,
       }}>
         <div className="mono" style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: T.ink70, display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
           <span style={{ color: T.ink, fontSize: 11 }}>Klasa, P.</span>
@@ -99,12 +116,11 @@ export default function App() {
           <span style={{ color: T.ink15 }}>│</span>
           <span style={{ color: T.ink40 }}>Sr. Designer, Hazelcast</span>
         </div>
-        <div className="mono" style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: T.ink70, display: "flex", gap: 18, alignItems: "center" }}>
-          <a href="https://github.com/pawelklasa" target="_blank" rel="noreferrer" style={{ color: T.ink70, textDecoration: "none" }}>GitHub ↗</a>
-          <a href="https://medium.com/@pawel.klasa" target="_blank" rel="noreferrer" style={{ color: T.ink70, textDecoration: "none" }}>Medium ↗</a>
-          <a href="https://pavka.design" target="_blank" rel="noreferrer" style={{ color: T.ink70, textDecoration: "none" }}>pavka.design ↗</a>
-          <span style={{ color: T.ink15 }}>│</span>
-          <a href="mailto:hello@pavka.design" style={{ color: T.ink, textDecoration: "none" }}>hello@pavka.design</a>
+        <div className="mono" style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: T.ink70, display: "flex", gap: isMobile ? 12 : 18, alignItems: "center", flexWrap: "wrap" }}>
+          <a href="https://github.com/pawelklasa" target="_blank" rel="noreferrer" style={{ color: T.ink70, textDecoration: "none", whiteSpace: "nowrap" }}>GitHub ↗</a>
+          <a href="https://medium.com/@pawel.klasa" target="_blank" rel="noreferrer" style={{ color: T.ink70, textDecoration: "none", whiteSpace: "nowrap" }}>Medium ↗</a>
+          {!isMobile && <span style={{ color: T.ink15 }}>│</span>}
+          <a href="mailto:hello@pavka.design" style={{ color: T.ink, textDecoration: "none", whiteSpace: "nowrap" }}>hello@pavka.design</a>
         </div>
       </header>
 
@@ -126,11 +142,11 @@ export default function App() {
       />
 
       {activeCat !== "ALL" && activeCat !== "FEED" && (
-        <div style={{ padding: "32px 48px 8px", borderBottom: `1px solid ${T.ink08}` }}>
+        <div style={{ padding: `${isMobile ? 24 : 32}px ${padX}px 8px`, borderBottom: `1px solid ${T.ink08}` }}>
           <div className="mono" style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: T.accent, marginBottom: 8 }}>
             § {activeCat}
           </div>
-          <div style={{ fontFamily: "'Inter Tight', sans-serif", fontSize: 32, letterSpacing: "-0.02em", color: T.ink }}>
+          <div style={{ fontFamily: "'Inter Tight', sans-serif", fontSize: isMobile ? 24 : 32, letterSpacing: "-0.02em", color: T.ink }}>
             {window.CATS[activeCat].label}
           </div>
           <div className="serif" style={{ fontStyle: "italic", color: T.ink70, marginTop: 6, fontSize: 15 }}>
@@ -140,13 +156,13 @@ export default function App() {
       )}
 
       {activeCat === "FEED" && ContributionGraph && (
-        <div style={{ padding: "40px 48px 56px", borderBottom: `1px solid ${T.ink15}` }}>
+        <div style={{ padding: `${isMobile ? 28 : 40}px ${padX}px ${isMobile ? 36 : 56}px`, borderBottom: `1px solid ${T.ink15}`, overflowX: "auto" }}>
           <ContributionGraph theme={tweaks.theme} data={ghData} />
         </div>
       )}
 
       {filtered.length === 0 ? (
-        <div style={{ padding: "120px 48px", textAlign: "center", color: T.ink40 }} className="mono">
+        <div style={{ padding: `${isMobile ? 80 : 120}px ${padX}px`, textAlign: "center", color: T.ink40 }} className="mono">
           <div style={{ fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase" }}>
             no records · ({String(filtered.length).padStart(3, "0")} ⁄ {String(allEntries.length).padStart(3, "0")})
           </div>
@@ -160,10 +176,12 @@ export default function App() {
       )}
 
       <footer style={{
-        marginTop: 80,
+        marginTop: isMobile ? 56 : 80,
         borderTop: `1px solid ${T.ink15}`,
-        padding: "40px 48px 60px",
-        display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 32,
+        padding: `${isMobile ? 32 : 40}px ${padX}px ${isMobile ? 48 : 60}px`,
+        display: "grid",
+        gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr",
+        gap: isMobile ? 24 : 32,
       }}>
         <div className="mono" style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: T.ink40, lineHeight: 1.8 }}>
           <div style={{ color: T.ink, marginBottom: 4 }}>Colophon</div>
@@ -177,7 +195,7 @@ export default function App() {
           Tools as marked, mostly MIT.<br />
           Contact for commercial work.
         </div>
-        <div className="mono" style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: T.ink40, lineHeight: 1.8, textAlign: "right" }}>
+        <div className="mono" style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: T.ink40, lineHeight: 1.8, textAlign: isMobile ? "left" : "right" }}>
           <div style={{ color: T.ink, marginBottom: 4 }}>Errata</div>
           Last revised Apr 2026.<br />
           Maintained by the author.<br />

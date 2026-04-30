@@ -2,6 +2,26 @@ import React from "react";
 /* global React, ReactDOM */
 const { useState: useStateC, useMemo: useMemoC, useEffect: useEffectC, useRef: useRefC } = React;
 
+// Shared responsive hook — exposed on window so other components can use it.
+function useBreakpoint(breakpoint = 768) {
+  const [isBelow, setIsBelow] = useStateC(
+    typeof window !== "undefined" ? window.innerWidth < breakpoint : false
+  );
+  useEffectC(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+    const handler = (e) => setIsBelow(e.matches);
+    if (mq.addEventListener) mq.addEventListener("change", handler);
+    else mq.addListener(handler);
+    setIsBelow(mq.matches);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener("change", handler);
+      else mq.removeListener(handler);
+    };
+  }, [breakpoint]);
+  return isBelow;
+}
+window.useBreakpoint = useBreakpoint;
+
 // ============================================================
 // THEME — values match the manifesto's discipline.
 // ============================================================
@@ -93,14 +113,27 @@ const CATS = {
 // ============================================================
 function Cover({ theme, total, byCat, onJump, ghData }) {
   const T = THEMES[theme];
+  const isMobile = useBreakpoint(900);
+  const isNarrow = useBreakpoint(560);
+  const padX = isNarrow ? 20 : isMobile ? 28 : 48;
   return (
     <section style={{ borderBottom: `1px solid ${T.ink15}` }}>
-      <div style={{ padding: "56px 48px 40px", display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1.4fr)", gap: 48, alignItems: "start" }}>
+      <div style={{
+        padding: `${isMobile ? 36 : 56}px ${padX}px ${isMobile ? 28 : 40}px`,
+        display: "grid",
+        gridTemplateColumns: isMobile ? "1fr" : "minmax(0, 1fr) minmax(0, 1.4fr)",
+        gap: isMobile ? 32 : 48,
+        alignItems: "start",
+      }}>
         <div>
           <div className="mono" style={{ fontSize: 11, letterSpacing: "0.08em", color: T.ink40, textTransform: "uppercase", marginBottom: 24 }}>
             Vol. 01 — Klasa, P. — 1st printing — Apr 2026
           </div>
-          <h1 style={{ fontFamily: "'Inter Tight', sans-serif", fontWeight: 500, fontSize: 88, lineHeight: 0.92, letterSpacing: "-0.04em", margin: 0, color: T.ink }}>
+          <h1 style={{
+            fontFamily: "'Inter Tight', sans-serif", fontWeight: 500,
+            fontSize: "clamp(48px, 12vw, 88px)",
+            lineHeight: 0.92, letterSpacing: "-0.04em", margin: 0, color: T.ink,
+          }}>
             A public<br />catalogue<br />of work.
           </h1>
           <div className="mono" style={{ marginTop: 28, fontSize: 12, color: T.ink70, lineHeight: 1.6, maxWidth: 460 }}>
@@ -115,25 +148,39 @@ function Cover({ theme, total, byCat, onJump, ghData }) {
       </div>
 
       {/* Index strip */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", borderTop: `1px solid ${T.ink15}` }}>
-        {Object.keys(CATS).map((k) => (
-          <button key={k} onClick={() => onJump(k)} className="indexcell"
-            style={{
-              all: "unset", cursor: "pointer", padding: "20px 20px 22px",
-              borderRight: `1px solid ${T.ink15}`,
-              display: "flex", flexDirection: "column", gap: 4,
-            }}>
-            <div className="mono" style={{ fontSize: 10, letterSpacing: "0.1em", color: T.ink40, textTransform: "uppercase" }}>
-              {String(Object.keys(CATS).indexOf(k) + 1).padStart(2, "0")} / {k}
-            </div>
-            <div style={{ fontFamily: "'Inter Tight', sans-serif", fontWeight: 500, fontSize: 22, color: T.ink, letterSpacing: "-0.01em" }}>
-              {CATS[k].label}
-            </div>
-            <div className="mono" style={{ fontSize: 11, color: T.ink70 }}>
-              {byCat[k] || 0} entries
-            </div>
-          </button>
-        ))}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: isNarrow
+          ? "repeat(2, 1fr)"
+          : isMobile
+            ? "repeat(3, 1fr)"
+            : "repeat(7, 1fr)",
+        borderTop: `1px solid ${T.ink15}`,
+      }}>
+        {Object.keys(CATS).map((k, i) => {
+          const cols = isNarrow ? 2 : isMobile ? 3 : 7;
+          const isLastInRow = (i + 1) % cols === 0;
+          return (
+            <button key={k} onClick={() => onJump(k)} className="indexcell"
+              style={{
+                all: "unset", cursor: "pointer",
+                padding: isMobile ? "16px 16px 18px" : "20px 20px 22px",
+                borderRight: isLastInRow ? "none" : `1px solid ${T.ink15}`,
+                borderTop: i >= cols ? `1px solid ${T.ink15}` : "none",
+                display: "flex", flexDirection: "column", gap: 4,
+              }}>
+              <div className="mono" style={{ fontSize: 10, letterSpacing: "0.1em", color: T.ink40, textTransform: "uppercase" }}>
+                {String(Object.keys(CATS).indexOf(k) + 1).padStart(2, "0")} / {k}
+              </div>
+              <div style={{ fontFamily: "'Inter Tight', sans-serif", fontWeight: 500, fontSize: isMobile ? 18 : 22, color: T.ink, letterSpacing: "-0.01em" }}>
+                {CATS[k].label}
+              </div>
+              <div className="mono" style={{ fontSize: 11, color: T.ink70 }}>
+                {byCat[k] || 0} entries
+              </div>
+            </button>
+          );
+        })}
       </div>
     </section>
   );
@@ -145,6 +192,7 @@ function Cover({ theme, total, byCat, onJump, ghData }) {
 function Controls({ theme, query, setQuery, activeCat, setActiveCat, view, setView, total, shown, sort, setSort }) {
   const T = THEMES[theme];
   const inputRef = useRefC(null);
+  const isMobile = useBreakpoint(768);
 
   useEffectC(() => {
     const onKey = (e) => {
@@ -167,10 +215,21 @@ function Controls({ theme, query, setQuery, activeCat, setActiveCat, view, setVi
       background: T.bg,
       borderBottom: `1px solid ${T.ink15}`,
     }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr auto", alignItems: "stretch", borderBottom: `1px solid ${T.ink08}` }}>
-        <div style={{ position: "relative", borderRight: `1px solid ${T.ink15}` }}>
-          <span className="mono" style={{ position: "absolute", left: 24, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: T.ink40, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-            Search ⁄ <span style={{ color: T.ink70 }}>press /</span>
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: isMobile ? "1fr" : "1fr auto",
+        alignItems: "stretch",
+        borderBottom: `1px solid ${T.ink08}`,
+      }}>
+        <div style={{ position: "relative", borderRight: isMobile ? "none" : `1px solid ${T.ink15}` }}>
+          <span className="mono" style={{
+            position: "absolute",
+            left: isMobile ? 16 : 24,
+            top: "50%", transform: "translateY(-50%)",
+            fontSize: 11, color: T.ink40, letterSpacing: "0.08em", textTransform: "uppercase",
+            pointerEvents: "none",
+          }}>
+            Search{!isMobile && <> ⁄ <span style={{ color: T.ink70 }}>press /</span></>}
           </span>
           <input
             ref={inputRef}
@@ -179,35 +238,46 @@ function Controls({ theme, query, setQuery, activeCat, setActiveCat, view, setVi
             placeholder=""
             style={{
               all: "unset", width: "100%", boxSizing: "border-box",
-              padding: "20px 24px 20px 180px",
+              padding: isMobile ? "16px 56px 16px 96px" : "20px 24px 20px 180px",
               fontFamily: "'Inter Tight', sans-serif",
-              fontSize: 17, color: T.ink,
+              fontSize: isMobile ? 15 : 17, color: T.ink,
               caretColor: T.accent,
             }}
           />
           {query && (
             <button onClick={() => setQuery("")} className="mono"
-              style={{ all: "unset", cursor: "pointer", position: "absolute", right: 24, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: T.ink40, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+              style={{ all: "unset", cursor: "pointer", position: "absolute", right: isMobile ? 16 : 24, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: T.ink40, letterSpacing: "0.08em", textTransform: "uppercase" }}>
               clear ✕
             </button>
           )}
         </div>
-        <div className="mono" style={{ display: "flex", alignItems: "center", gap: 0, padding: "0 24px", fontSize: 11, color: T.ink70, letterSpacing: "0.08em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
-          <span>{String(shown).padStart(3, "0")} / {String(total).padStart(3, "0")}</span>
-          <span style={{ color: T.ink15, margin: "0 16px" }}>│</span>
-          <span style={{ color: T.ink40 }}>showing</span>
-        </div>
+        {!isMobile && (
+          <div className="mono" style={{ display: "flex", alignItems: "center", gap: 0, padding: "0 24px", fontSize: 11, color: T.ink70, letterSpacing: "0.08em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+            <span>{String(shown).padStart(3, "0")} / {String(total).padStart(3, "0")}</span>
+            <span style={{ color: T.ink15, margin: "0 16px" }}>│</span>
+            <span style={{ color: T.ink40 }}>showing</span>
+          </div>
+        )}
       </div>
 
       {/* Category filter row */}
-      <div style={{ display: "flex", alignItems: "stretch", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "stretch" }}>
+      <div style={{
+        display: "flex", alignItems: "stretch",
+        justifyContent: isMobile ? "flex-start" : "space-between",
+        flexDirection: isMobile ? "column" : "row",
+      }}>
+        <div style={{
+          display: "flex", alignItems: "stretch",
+          overflowX: "auto",
+          WebkitOverflowScrolling: "touch",
+          borderBottom: isMobile ? `1px solid ${T.ink08}` : "none",
+        }}>
           <FilterPill T={T} active={activeCat === "ALL"} onClick={() => setActiveCat("ALL")}>All</FilterPill>
           {Object.keys(CATS).map((k) => (
             <FilterPill key={k} T={T} active={activeCat === k} onClick={() => setActiveCat(k)}>{CATS[k].label}</FilterPill>
           ))}
         </div>
-        <div style={{ display: "flex", alignItems: "stretch" }}>
+        <div style={{ display: "flex", alignItems: "stretch", justifyContent: isMobile ? "space-between" : "flex-end" }}>
           <SortControl T={T} sort={sort} setSort={setSort} />
           <ViewToggle T={T} view={view} setView={setView} />
         </div>
@@ -227,6 +297,8 @@ function FilterPill({ T, active, onClick, children }) {
         background: active ? T.ink : "transparent",
         borderRight: `1px solid ${T.ink15}`,
         transition: "background 80ms",
+        whiteSpace: "nowrap",
+        flexShrink: 0,
       }}>
       {children}
     </button>
