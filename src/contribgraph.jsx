@@ -205,7 +205,7 @@ function ContributionGraph({ theme, compact, data }) {
       </div>
 
       {/* Recent events list */}
-      {!compact && (
+      {!compact && events && events.length > 0 && (
       <div style={{ marginTop: 40, borderTop: `1px solid ${T.ink15}`, paddingTop: 24 }}>
         <div className="mono" style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: T.ink40, marginBottom: 16 }}>
           Recent activity
