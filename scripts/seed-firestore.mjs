@@ -55,6 +55,18 @@ function sanitize(value) {
   return value;
 }
 
+const seedIds = new Set(ENTRIES.map((e) => e.id).filter(Boolean));
+
+// Delete stale documents (ones present in Firestore but no longer in data.jsx)
+const existing = await db.collection("entries").listDocuments();
+const stale = existing.filter((doc) => !seedIds.has(doc.id));
+if (stale.length > 0) {
+  const delBatch = db.batch();
+  stale.forEach((d) => delBatch.delete(d));
+  await delBatch.commit();
+  console.log(`✗ Deleted ${stale.length} stale document(s): ${stale.map((d) => d.id).join(", ")}`);
+}
+
 const batch = db.batch();
 for (const entry of ENTRIES) {
   if (!entry.id) {

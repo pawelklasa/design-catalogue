@@ -448,7 +448,7 @@ function Detail({ entry, theme, onClose, allEntries }) {
               marginRight: "auto",
             }}
           >
-            {(entry.source === "medium" || entry.source === "rich") && entry.body ? (
+            {(entry.source === "medium" || entry.source === "rich" || entry.source === "arena") && entry.body ? (
               <div dangerouslySetInnerHTML={{ __html: entry.body }} />
             ) : (
               entry.body
@@ -505,6 +505,19 @@ function Detail({ entry, theme, onClose, allEntries }) {
                 ),
               ],
               entry.download && ["File", `${entry.download} (${entry.size})`],
+              entry.link && [
+                "Link",
+                (
+                  <a
+                    href={entry.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: T.accent, textDecoration: "underline" }}
+                  >
+                    {entry.link.replace(/^https?:\/\//, "")}
+                  </a>
+                ),
+              ],
             ]
               .filter(Boolean)
               .map(([k, v]) => (
@@ -557,6 +570,27 @@ function Detail({ entry, theme, onClose, allEntries }) {
             >
               ↓ Download {entry.download}
             </button>
+          )}
+          {entry.link && (
+            <a
+              className="mono"
+              href={entry.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "inline-block",
+                marginTop: 36,
+                padding: "16px 24px",
+                background: T.ink,
+                color: T.bg,
+                fontSize: 11,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                textDecoration: "none",
+              }}
+            >
+              ↗ Open {entry.title}
+            </a>
           )}
         </div>
       </div>

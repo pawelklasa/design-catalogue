@@ -100,12 +100,12 @@ const THEMES = {
 
 const CATS = {
   WORK:    { label: "Work",        desc: "Case studies. Things that shipped." },
-  ATOM:    { label: "Atoms",       desc: "Components. Reusable interface units." },
-  METHOD:  { label: "Methods",     desc: "Heuristics. Opinions, codified." },
+  CHEWING: { label: "Chewing on",  desc: "References, fragments, half-formed thoughts. Live from Are.na." },
   WRITING: { label: "Writing",     desc: "Essays and articles. Mostly Bootcamp." },
-  TOOL:    { label: "Tools",       desc: "Files and snippets. Take them." },
+  TOOL:    { label: "okay.tools", desc: "A small studio of tools that make the invisible obvious. Free, open-source, runs in your browser." },
   DEAD:    { label: "Dead ends",   desc: "Failed experiments. Open archive." },
   FEED:    { label: "Feed",        desc: "Live commits, contributions, activity." },
+  CV:      { label: "CV",          desc: "Curriculum vitae. Twelve years, condensed." },
 };
 
 // ============================================================
@@ -154,11 +154,11 @@ function Cover({ theme, total, byCat, onJump, ghData }) {
           ? "repeat(2, 1fr)"
           : isMobile
             ? "repeat(3, 1fr)"
-            : "repeat(7, 1fr)",
+            : `repeat(${Object.keys(CATS).length}, 1fr)`,
         borderTop: `1px solid ${T.ink15}`,
       }}>
         {Object.keys(CATS).map((k, i) => {
-          const cols = isNarrow ? 2 : isMobile ? 3 : 7;
+          const cols = isNarrow ? 2 : isMobile ? 3 : Object.keys(CATS).length;
           const isLastInRow = (i + 1) % cols === 0;
           return (
             <button key={k} onClick={() => onJump(k)} className="indexcell"
@@ -176,7 +176,7 @@ function Cover({ theme, total, byCat, onJump, ghData }) {
                 {CATS[k].label}
               </div>
               <div className="mono" style={{ fontSize: 11, color: T.ink70 }}>
-                {byCat[k] || 0} entries
+                {k === "CV" ? "single page" : `${byCat[k] || 0} entries`}
               </div>
             </button>
           );

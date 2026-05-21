@@ -1,6 +1,6 @@
 import React from "react";
 // Catalog data — Pav Klasa's public catalog
-// Categories: WORK | ATOM | METHOD | TOOL | DEAD | WRITING | FEED
+// Categories: WORK | CHEWING | TOOL | DEAD | WRITING | FEED
 
 const ENTRIES = [
   // ========== WORK (case studies) ==========
@@ -541,101 +541,90 @@ const ENTRIES = [
     company: "Hazelcast",
   },
 
-  // ========== ATOM (components & screens) ==========
+  // ========== TOOL (okay.tools — a small studio of tools) ==========
   {
-    id: "PVK-24-101", cat: "ATOM", year: 2024,
-    title: "DataTable — virtualised, resizable, sticky everything",
-    short: "10M-row table component with column pinning, group headers, and inline edit.",
-    tags: ["react", "virtualisation", "table"],
-    body: "Three years of incremental work distilled into one component. Row virtualisation via fixed-height windowing, column virtualisation by intersection observer, sticky group headers via position: sticky pyramids. Used across six products.",
-    refs: ["github.com/pawelklasa (private)"],
+    id: "PVK-TOOL-01", cat: "TOOL", year: 2026, status: "available",
+    title: "HSL → OKLCH",
+    short: "Color is finally OK. Migrate HSL to OKLCH, generate balanced palettes, and see exactly which colours your old system was lying about.",
+    tags: ["oklch", "hsl", "palette", "ramp", "contrast", "gradient", "open-source"],
+    body: `
+<p>Twin sliders side by side. One drifts the hue. The other holds it. Same lightness in HSL — very much not. OKLCH — actually balanced.</p>
+<p>Migrate an HSL ramp to OKLCH, generate eleven balanced steps from one anchor, check every WCAG + APCA passing pair, and watch the same blend collapse (or hold) across five colour spaces.</p>
+<p>Free. Open-source (MIT). Runs in your browser.</p>
+`,
+    refs: ["https://medium.com/design-bootcamp/color-is-finally-ok-82f368f3408c", "https://github.com/pawelklasa/okay-tools"],
+    link: "https://pawelklasa.github.io/okay-tools/#/",
   },
   {
-    id: "PVK-24-102", cat: "ATOM", year: 2024,
-    title: "CommandBar — universal launcher",
-    short: "⌘K palette with action providers, fuzzy match, and recent-history weighting.",
-    tags: ["react", "search", "kbd"],
-    body: "Action providers are pluggable: any feature can register entries that surface in the bar. Fuzzy matcher uses sub-sequence + acronym scoring; recents get a logarithmic boost. The animation is intentionally fast — 80ms — because the bar should disappear before you finish thinking about it.",
+    id: "PVK-TOOL-02", cat: "TOOL", year: 2026, status: "available",
+    title: "form-hostility",
+    short: "A validation timing playground. Toggle strategies and watch the same form go from helpful to outright hostile.",
+    tags: ["forms", "validation", "ux", "timing", "open-source"],
+    body: `
+<p>Four validation strategies. Six failure modes. One playground.</p>
+<ul>
+  <li><strong>Eager</strong> — punishes typing. <code>paw</code> ⚠ not a valid email.</li>
+  <li><strong>Lazy</strong> — waits until submit, then dumps everything at once.</li>
+  <li><strong>On-blur</strong> — fires the moment focus leaves a field.</li>
+  <li><strong>Smart</strong> — waits its turn. <code>paw</code> · still typing.</li>
+</ul>
+<p>Toggle between them and feel the difference.</p>
+`,
+    refs: ["https://github.com/pawelklasa/okay-tools"],
+    link: "https://pawelklasa.github.io/okay-tools/#/",
   },
   {
-    id: "PVK-23-103", cat: "ATOM", year: 2023,
-    title: "InlineDiff — semantic JSON delta",
-    short: "Side-by-side and unified diff, with structural awareness.",
-    tags: ["json", "diff", "monaco"],
-    body: "Stops yelling about whitespace. Renames are detected and shown as renames. Reordered arrays don't appear changed unless you ask for ordered comparison.",
+    id: "PVK-TOOL-03", cat: "TOOL", year: 2026, status: "available",
+    title: "token-costumes",
+    short: "Audit your token system. See which 'semantic' tokens are actually primitives in costume — and what an honest three-layer system looks like.",
+    tags: ["design-tokens", "design-systems", "audit", "naming", "open-source"],
+    body: `
+<p>Most design defaults get accepted without evaluation. okay.tools makes the cost visible.</p>
+<ul>
+  <li><strong>Primitive in costume</strong> — <code>--color-primary: #3b82f6</code> // used as bg, link, icon, border, text, ring.</li>
+  <li><strong>Polysemic</strong> — <code>--color-primary-500</code> // also used as <code>--button-bg</code>, <code>--link</code>, <code>--ring</code>.</li>
+  <li><strong>Honest token</strong> — <code>--color-action: var(--color-blue-500)</code> // aliases primitive, single purpose.</li>
+</ul>
+<p>Detects costumes, polysemy, and layer violations across your token system.</p>
+`,
+    refs: ["https://github.com/pawelklasa/okay-tools"],
+    link: "https://pawelklasa.github.io/okay-tools/#/",
   },
   {
-    id: "PVK-23-104", cat: "ATOM", year: 2023,
-    title: "Toast — deterministic, stack-aware",
-    short: "No spinning queue. No 'dismiss all'. Replaces itself with newer state.",
-    tags: ["react", "state"],
-    body: "Toasts in most systems are a ledger. This one is a register: a new toast for the same key replaces the old one in place. Three slots maximum, oldest evicted. Less honest, more useful.",
+    id: "PVK-TOOL-04", cat: "TOOL", year: 2026, status: "available",
+    title: "honest-tokens",
+    short: "Paste a brand colour. Get a complete three-layer token system, plus a brand contract for your AI coding tools.",
+    tags: ["design-tokens", "oklch", "tailwind", "dtcg", "ai", "open-source"],
+    body: `
+<p>One anchor — <code>oklch(0.55 0.21 285)</code> — out comes a primitive ramp, a semantic alias layer, and a component layer. Zero costumes.</p>
+<p>Exports to OKLCH CSS, Tailwind config, DTCG JSON, and a <code>CLAUDE.md</code> brand contract you can hand to an AI coding tool so it stops inventing colours.</p>
+`,
+    refs: ["https://github.com/pawelklasa/okay-tools"],
+    link: "https://pawelklasa.github.io/okay-tools/#/",
   },
   {
-    id: "PVK-22-105", cat: "ATOM", year: 2022,
-    title: "Sparkline — 1px-anti-aliased",
-    short: "Crisp inline metric chart at 16×40, no library.",
-    tags: ["svg", "data-viz"],
-    body: "Library sparklines blur because they don't respect device pixels. This one snaps to half-pixel grid, draws a polyline of integer Y, and looks correct at 1× and 2×. 1.4kb gzipped.",
-  },
-
-  // ========== METHOD (patterns & heuristics) ==========
-  {
-    id: "PVK-METHOD-01", cat: "METHOD", year: 2024,
-    title: "The Empty State Test",
-    short: "If your empty state is a shrug, your filled state is a lie.",
-    tags: ["heuristic", "writing"],
-    body: "Design the empty state first. Not the 'first-run welcome' empty state — the one a power user lands in when their cluster has zero alerts. If you can only describe it as 'No items', the feature is decoration. If you can give it a default action, a metric to brag about, a useful link — the feature has earned its panel.",
+    id: "PVK-TOOL-05", cat: "TOOL", year: 2026, status: "available",
+    title: "default-audit",
+    short: "Paste CSS, JSX, or class names. See which AI-era defaults — shadcn, Tailwind, Inter, Lucide, Radix — are in your code.",
+    tags: ["audit", "shadcn", "tailwind", "lucide", "inter", "radix", "ai", "open-source"],
+    body: `
+<p>Detects <code>--primary: 222.2 47.4% 11.2%</code> as a shadcn/ui token, flags <code>"lucide-react"</code> as the AI-era icon default, and scores the overall density.</p>
+<p>If your codebase looks like every other AI-assisted codebase, default-audit will tell you exactly why.</p>
+`,
+    refs: ["https://github.com/pawelklasa/okay-tools"],
+    link: "https://pawelklasa.github.io/okay-tools/#/",
   },
   {
-    id: "PVK-METHOD-02", cat: "METHOD", year: 2024,
-    title: "Defaults Are The Design",
-    short: "Every config knob is a confession that the team couldn't decide.",
-    tags: ["heuristic", "decision"],
-    body: "Knobs scale linearly in cost and quadratically in support burden. Ship with one opinion. If two equally-valid opinions exist, pick one and document the other as 'why we didn't'. The user can always file a feature request — they cannot un-confuse themselves at 2am.",
-  },
-  {
-    id: "PVK-METHOD-03", cat: "METHOD", year: 2023,
-    title: "The Hairline Rule",
-    short: "If a line is only there to separate, it should be 1px and the lightest possible value.",
-    tags: ["visual", "heuristic"],
-    body: "Borders are not architecture. They are stitches. A thick border says 'this thing matters'; if everything matters, nothing does. Reserve thick lines for actual emphasis (a sidebar edge, a focused element). The rest gets a hairline at 8% opacity. Density without noise.",
-  },
-  {
-    id: "PVK-METHOD-04", cat: "METHOD", year: 2023,
-    title: "Tooltips Are An Apology",
-    short: "Every tooltip is a label that didn't fit. Ask why it didn't fit.",
-    tags: ["heuristic", "writing"],
-    body: "Sometimes the answer is honest — a chart's data point can't carry text. But often the answer is that the icon was wrong, or the column header was wrong, or the action was hidden when it shouldn't have been. Audit your tooltips quarterly and earn back what you can.",
-  },
-
-  // ========== TOOL (downloadable) ==========
-  {
-    id: "PVK-TOOL-01", cat: "TOOL", year: 2024, status: "available",
-    title: "Hairline Grid (Figma)",
-    short: "12-col, 8pt-baseline working file. Includes the only auto-layout cheat sheet you'll need.",
-    tags: ["figma", "grid", "starter"],
-    body: "A working file, not a 'design system'. 12 columns, 8pt baseline, and three pre-built layouts I rebuild on every project anyway. Fork it.",
-    download: "hairline-grid-v3.fig",
-    size: "1.2 MB",
-  },
-  {
-    id: "PVK-TOOL-02", cat: "TOOL", year: 2024, status: "available",
-    title: "useStickyState — React hook",
-    short: "useState that survives a page reload. 18 lines. No dependencies.",
-    tags: ["react", "hook", "snippet"],
-    body: "Drop-in replacement for useState that persists to localStorage with a serializer hook. Used in every prototype I make.",
-    download: "useStickyState.ts",
-    size: "612 bytes",
-  },
-  {
-    id: "PVK-TOOL-03", cat: "TOOL", year: 2023, status: "available",
-    title: "Interview Kit — Senior PD",
-    short: "The take-home brief and rubric I used to hire 3 designers at Hazelcast.",
-    tags: ["hiring", "rubric"],
-    body: "A small brief that takes ~2 hours. The rubric scores process, craft, and communication on equal footing. Open-sourced because hiring rubrics shouldn't be a trade secret.",
-    download: "interview-kit.pdf",
-    size: "84 KB",
+    id: "PVK-TOOL-06", cat: "TOOL", year: 2026, status: "available",
+    title: "preflight",
+    short: "Aviation-style pre-flight checklists for software work. Walk through the items you cannot skip.",
+    tags: ["checklists", "process", "ops", "open-source"],
+    body: `
+<p>Pre-deploy. Pre-review. Pre-incident response. Pre-launch.</p>
+<p>Four checklists, each modelled on aviation pre-flight procedure — the items aren't suggestions, and you don't get to skip ahead. Walk through them, tick them off, ship the thing.</p>
+`,
+    refs: ["https://github.com/pawelklasa/okay-tools"],
+    link: "https://pawelklasa.github.io/okay-tools/#/",
   },
 
   // ========== DEAD (failed experiments) ==========

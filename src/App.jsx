@@ -2,6 +2,8 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useEntries } from "./useEntries.js";
 import { useGithubContributions } from "./useGithubContributions.js";
 import { useMediumArticles } from "./useMediumArticles.js";
+import { useArenaBlocks } from "./useArenaBlocks.js";
+import CVView from "./cv.jsx";
 
 const TWEAK_DEFAULTS = {
   theme: "paper",
@@ -22,14 +24,20 @@ export default function App() {
   const { entries: rawEntries } = useEntries();
   const { data: ghData } = useGithubContributions();
   const { articles: mediumArticles } = useMediumArticles();
+  const { blocks: arenaBlocks } = useArenaBlocks();
 
-  // Merge live Medium articles into the catalogue: replace any bundled
-  // WRITING entries with the live feed when it's available.
+  // Merge live Medium articles + Are.na blocks into the catalogue.
+  // Replace any bundled WRITING / CHEWING entries when live data is available.
   const allEntries = useMemo(() => {
-    if (!mediumArticles || mediumArticles.length === 0) return rawEntries;
-    const nonWriting = rawEntries.filter((e) => e.cat !== "WRITING");
-    return [...nonWriting, ...mediumArticles];
-  }, [rawEntries, mediumArticles]);
+    let list = rawEntries;
+    if (mediumArticles && mediumArticles.length > 0) {
+      list = list.filter((e) => e.cat !== "WRITING").concat(mediumArticles);
+    }
+    if (arenaBlocks && arenaBlocks.length > 0) {
+      list = list.filter((e) => e.cat !== "CHEWING").concat(arenaBlocks);
+    }
+    return list;
+  }, [rawEntries, mediumArticles, arenaBlocks]);
 
   useEffect(() => {
     document.body.style.background = T.bg;
@@ -141,7 +149,7 @@ export default function App() {
         total={allEntries.length} shown={filtered.length}
       />
 
-      {activeCat !== "ALL" && activeCat !== "FEED" && (
+      {activeCat !== "ALL" && activeCat !== "FEED" && activeCat !== "CV" && (
         <div style={{ padding: `${isMobile ? 24 : 32}px ${padX}px 8px`, borderBottom: `1px solid ${T.ink08}` }}>
           <div className="mono" style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: T.accent, marginBottom: 8 }}>
             § {activeCat}
@@ -161,7 +169,9 @@ export default function App() {
         </div>
       )}
 
-      {filtered.length === 0 ? (
+      {activeCat === "CV" ? (
+        <CVView theme={tweaks.theme} />
+      ) : filtered.length === 0 ? (
         <div style={{ padding: `${isMobile ? 80 : 120}px ${padX}px`, textAlign: "center", color: T.ink40 }} className="mono">
           <div style={{ fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase" }}>
             no records · ({String(filtered.length).padStart(3, "0")} ⁄ {String(allEntries.length).padStart(3, "0")})
