@@ -544,6 +544,7 @@ const ENTRIES = [
   // ========== TOOL (okay.tools — a small studio of tools) ==========
   {
     id: "PVK-TOOL-01", cat: "TOOL", year: 2026, status: "available",
+    source: "rich",
     title: "HSL → OKLCH",
     short: "Color is finally OK. Migrate HSL to OKLCH, generate balanced palettes, and see exactly which colours your old system was lying about.",
     tags: ["oklch", "hsl", "palette", "ramp", "contrast", "gradient", "open-source"],
@@ -557,6 +558,7 @@ const ENTRIES = [
   },
   {
     id: "PVK-TOOL-02", cat: "TOOL", year: 2026, status: "available",
+    source: "rich",
     title: "form-hostility",
     short: "A validation timing playground. Toggle strategies and watch the same form go from helpful to outright hostile.",
     tags: ["forms", "validation", "ux", "timing", "open-source"],
@@ -575,6 +577,7 @@ const ENTRIES = [
   },
   {
     id: "PVK-TOOL-03", cat: "TOOL", year: 2026, status: "available",
+    source: "rich",
     title: "token-costumes",
     short: "Audit your token system. See which 'semantic' tokens are actually primitives in costume — and what an honest three-layer system looks like.",
     tags: ["design-tokens", "design-systems", "audit", "naming", "open-source"],
@@ -592,6 +595,7 @@ const ENTRIES = [
   },
   {
     id: "PVK-TOOL-04", cat: "TOOL", year: 2026, status: "available",
+    source: "rich",
     title: "honest-tokens",
     short: "Paste a brand colour. Get a complete three-layer token system, plus a brand contract for your AI coding tools.",
     tags: ["design-tokens", "oklch", "tailwind", "dtcg", "ai", "open-source"],
@@ -604,6 +608,7 @@ const ENTRIES = [
   },
   {
     id: "PVK-TOOL-05", cat: "TOOL", year: 2026, status: "available",
+    source: "rich",
     title: "default-audit",
     short: "Paste CSS, JSX, or class names. See which AI-era defaults — shadcn, Tailwind, Inter, Lucide, Radix — are in your code.",
     tags: ["audit", "shadcn", "tailwind", "lucide", "inter", "radix", "ai", "open-source"],
@@ -616,6 +621,7 @@ const ENTRIES = [
   },
   {
     id: "PVK-TOOL-06", cat: "TOOL", year: 2026, status: "available",
+    source: "rich",
     title: "preflight",
     short: "Aviation-style pre-flight checklists for software work. Walk through the items you cannot skip.",
     tags: ["checklists", "process", "ops", "open-source"],

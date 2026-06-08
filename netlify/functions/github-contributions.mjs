@@ -1,55 +1,17 @@
 /**
  * Netlify Function: GitHub contributions + recent activity.
  *
- * Calls the GitHub GraphQL + REST APIs server-side so the token never
- * touches the browser. Set the `GITHUB_TOKEN` env var in
- *   Netlify → Site configuration → Environment variables
- *
- * Token scopes (classic PAT):
- *   - `read:user` + `public_repo` → PUBLIC contributions only. The total
- *     will be LOWER than the one shown on your profile while logged in.
- *   - `read:user` + `repo`        → includes PRIVATE contributions, so the
- *     total matches the number on github.com/<you> when signed in.
- *     Requires "Settings → Profile → Include private contributions on my
- *     profile" to be enabled.
+ * No token required. Uses only PUBLIC data sources:
+ *   - Contributions calendar: github-contributions-api.jogruber.de
+ *     (scrapes the public contribution graph; returns date/count/level).
+ *   - Recent activity + public repo count: the unauthenticated GitHub
+ *     REST API (rate-limited to 60 req/hr per IP — fine behind the CDN cache).
  *
  * Optional:
  *   GITHUB_USERNAME — defaults to `pawelklasa`.
  *
  * Cached for 5 minutes via Cache-Control + Netlify CDN.
  */
-
-// NOTE: `viewer` (the authenticated user) is required to include PRIVATE
-// contributions in the calendar total. Querying `user(login: …)` returns
-// PUBLIC-only counts even with a `repo`-scoped token, which is why the total
-// would otherwise be lower than the number shown on your profile.
-const GRAPHQL_QUERY = `
-  query {
-    viewer {
-      repositories(privacy: PUBLIC, ownerAffiliations: OWNER) { totalCount }
-      contributionsCollection {
-        contributionCalendar {
-          totalContributions
-          weeks {
-            contributionDays {
-              date
-              contributionCount
-              contributionLevel
-            }
-          }
-        }
-      }
-    }
-  }
-`;
-
-const LEVEL_MAP = {
-  NONE: 0,
-  FIRST_QUARTILE: 1,
-  SECOND_QUARTILE: 2,
-  THIRD_QUARTILE: 3,
-  FOURTH_QUARTILE: 4,
-};
 
 function relTime(iso) {
   const ms = Date.now() - new Date(iso).getTime();
@@ -106,58 +68,56 @@ function describeEvent(ev) {
   }
 }
 
+// Group jogruber's flat day list into weeks of 7 slots (Sun..Sat), padding
+// the leading/trailing partial weeks with null — matching the grid the
+// frontend expects.
+function toWeeks(days) {
+  const weeks = [];
+  let week = new Array(7).fill(null);
+  for (const d of days) {
+    const wd = new Date(d.date + "T00:00:00").getDay(); // 0 = Sunday
+    if (wd === 0 && week.some(Boolean)) {
+      weeks.push(week);
+      week = new Array(7).fill(null);
+    }
+    week[wd] = { date: d.date, count: d.count, level: d.level };
+  }
+  if (week.some(Boolean)) weeks.push(week);
+  return weeks;
+}
+
 export default async (req, context) => {
-  const token = process.env.GITHUB_TOKEN;
   const username = process.env.GITHUB_USERNAME || "pawelklasa";
 
-  if (!token) {
-    return new Response(JSON.stringify({ error: "GITHUB_TOKEN not configured" }), {
-      status: 500,
-      headers: { "content-type": "application/json" },
-    });
-  }
-
   const headers = {
-    "authorization": `Bearer ${token}`,
     "user-agent": "design-catalogue-netlify-fn",
     "accept": "application/vnd.github+json",
   };
 
   try {
-    const [gqlRes, eventsRes] = await Promise.all([
-      fetch("https://api.github.com/graphql", {
-        method: "POST",
-        headers: { ...headers, "content-type": "application/json" },
-        body: JSON.stringify({ query: GRAPHQL_QUERY }),
-      }),
+    const [contribRes, eventsRes, userRes] = await Promise.all([
+      fetch(`https://github-contributions-api.jogruber.de/v4/${username}?y=last`),
       fetch(`https://api.github.com/users/${username}/events/public?per_page=30`, { headers }),
+      fetch(`https://api.github.com/users/${username}`, { headers }),
     ]);
 
-    if (!gqlRes.ok) {
-      const text = await gqlRes.text();
-      return new Response(JSON.stringify({ error: "GitHub GraphQL failed", status: gqlRes.status, body: text }), {
+    if (!contribRes.ok) {
+      const text = await contribRes.text();
+      return new Response(JSON.stringify({ error: "Contributions source failed", status: contribRes.status, body: text }), {
         status: 502,
         headers: { "content-type": "application/json" },
       });
     }
 
-    const gql = await gqlRes.json();
-    const user = gql.data?.viewer;
-    if (!user) {
-      return new Response(JSON.stringify({ error: "User not found", details: gql.errors }), {
-        status: 404,
-        headers: { "content-type": "application/json" },
-      });
-    }
+    const contrib = await contribRes.json();
+    const days = Array.isArray(contrib.contributions) ? contrib.contributions : [];
+    const weeks = toWeeks(days);
+    const totalContributions =
+      contrib.total?.lastYear ??
+      days.reduce((sum, d) => sum + (d.count || 0), 0);
 
-    const cal = user.contributionsCollection.contributionCalendar;
-    const weeks = cal.weeks.map((w) =>
-      w.contributionDays.map((d) => ({
-        date: d.date, // ISO yyyy-mm-dd
-        count: d.contributionCount,
-        level: LEVEL_MAP[d.contributionLevel] ?? 0,
-      }))
-    );
+    const userJson = userRes.ok ? await userRes.json() : null;
+    const publicRepos = userJson?.public_repos ?? null;
 
     const events = eventsRes.ok ? await eventsRes.json() : [];
     const recentEvents = (Array.isArray(events) ? events : [])
@@ -173,9 +133,9 @@ export default async (req, context) => {
       });
 
     const body = {
-      totalContributions: cal.totalContributions,
+      totalContributions,
       weeks,
-      publicRepos: user.repositories.totalCount,
+      publicRepos,
       recentEvents,
       fetchedAt: new Date().toISOString(),
     };
