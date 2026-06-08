@@ -178,10 +178,6 @@ export default async (req, context) => {
       publicRepos: user.repositories.totalCount,
       recentEvents,
       fetchedAt: new Date().toISOString(),
-      _debug: {
-        tokenPrefix: (process.env.GITHUB_TOKEN || "").slice(0, 8),
-        oauthScopes: gqlRes.headers.get("x-oauth-scopes") || eventsRes.headers.get("x-oauth-scopes") || null,
-      },
     };
 
     return new Response(JSON.stringify(body), {
