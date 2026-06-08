@@ -16,7 +16,7 @@ function buildEmptyWeeks() {
     for (let d = 0; d < 7; d++) {
       const date = new Date(start);
       date.setDate(start.getDate() + w * 7 + d);
-      week.push(date > today ? null : { date, level: null, count: 0 });
+      week.push(date > today ? null : { date, level: 0, count: 0 });
     }
     cells.push(week);
   }

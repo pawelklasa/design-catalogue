@@ -86,6 +86,49 @@ function toWeeks(days) {
   return weeks;
 }
 
+// Parse GitHub's public contributions HTML into [{date, count, level}].
+function parseContributionsHtml(html) {
+  const counts = {};
+  const tipRe = /<tool-tip[^>]*\bfor="([^"]+)"[^>]*>([^<]*)<\/tool-tip>/g;
+  let m;
+  while ((m = tipRe.exec(html))) {
+    const num = /^([\d,]+)\s+contribution/.exec(m[2].trim());
+    counts[m[1]] = num ? Number(num[1].replace(/,/g, "")) : 0;
+  }
+  const days = [];
+  const tdRe = /<td\b[^>]*class="[^"]*ContributionCalendar-day[^"]*"[^>]*>/g;
+  while ((m = tdRe.exec(html))) {
+    const td = m[0];
+    const date = /data-date="([^"]+)"/.exec(td)?.[1];
+    if (!date) continue;
+    const level = Number(/data-level="([^"]+)"/.exec(td)?.[1] ?? 0);
+    const id = /id="([^"]+)"/.exec(td)?.[1];
+    days.push({ date, count: counts[id] ?? 0, level });
+  }
+  days.sort((a, b) => a.date.localeCompare(b.date));
+  return days;
+}
+
+// Fetch the contribution calendar with no token. Primary source is GitHub's
+// own public HTML; jogruber's scraper API is a fallback if GitHub is blocked.
+async function fetchContributions(username) {
+  try {
+    const res = await fetch(`https://github.com/users/${username}/contributions`, {
+      headers: { "user-agent": "Mozilla/5.0 (design-catalogue)", "accept": "text/html" },
+    });
+    if (res.ok) {
+      const days = parseContributionsHtml(await res.text());
+      if (days.length) return { days, total: days.reduce((s, d) => s + d.count, 0) };
+    }
+  } catch { /* fall through to the backup source */ }
+
+  const res = await fetch(`https://github-contributions-api.jogruber.de/v4/${username}?y=last`);
+  if (!res.ok) throw new Error(`contributions source failed (${res.status})`);
+  const json = await res.json();
+  const days = (json.contributions || []).map((d) => ({ date: d.date, count: d.count, level: d.level }));
+  return { days, total: json.total?.lastYear ?? days.reduce((s, d) => s + d.count, 0) };
+}
+
 export default async (req, context) => {
   const username = process.env.GITHUB_USERNAME || "pawelklasa";
 
@@ -94,32 +137,24 @@ export default async (req, context) => {
     "accept": "application/vnd.github+json",
   };
 
+  // Resolve a fetch to null instead of rejecting, so one unreachable host
+  // can't take down the whole response.
+  const safe = (p) => p.then((r) => r).catch(() => null);
+
   try {
-    const [contribRes, eventsRes, userRes] = await Promise.all([
-      fetch(`https://github-contributions-api.jogruber.de/v4/${username}?y=last`),
-      fetch(`https://api.github.com/users/${username}/events/public?per_page=30`, { headers }),
-      fetch(`https://api.github.com/users/${username}`, { headers }),
+    const [contrib, eventsRes, userRes] = await Promise.all([
+      fetchContributions(username),
+      safe(fetch(`https://api.github.com/users/${username}/events/public?per_page=30`, { headers })),
+      safe(fetch(`https://api.github.com/users/${username}`, { headers })),
     ]);
 
-    if (!contribRes.ok) {
-      const text = await contribRes.text();
-      return new Response(JSON.stringify({ error: "Contributions source failed", status: contribRes.status, body: text }), {
-        status: 502,
-        headers: { "content-type": "application/json" },
-      });
-    }
+    const weeks = toWeeks(contrib.days);
+    const totalContributions = contrib.total;
 
-    const contrib = await contribRes.json();
-    const days = Array.isArray(contrib.contributions) ? contrib.contributions : [];
-    const weeks = toWeeks(days);
-    const totalContributions =
-      contrib.total?.lastYear ??
-      days.reduce((sum, d) => sum + (d.count || 0), 0);
-
-    const userJson = userRes.ok ? await userRes.json() : null;
+    const userJson = userRes && userRes.ok ? await userRes.json() : null;
     const publicRepos = userJson?.public_repos ?? null;
 
-    const events = eventsRes.ok ? await eventsRes.json() : [];
+    const events = eventsRes && eventsRes.ok ? await eventsRes.json() : [];
     const recentEvents = (Array.isArray(events) ? events : [])
       .slice(0, 10)
       .map((ev) => {
