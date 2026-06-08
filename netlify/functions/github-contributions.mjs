@@ -28,7 +28,6 @@ const GRAPHQL_QUERY = `
     viewer {
       repositories(privacy: PUBLIC, ownerAffiliations: OWNER) { totalCount }
       contributionsCollection {
-        restrictedContributionsCount
         contributionCalendar {
           totalContributions
           weeks {
@@ -152,7 +151,6 @@ export default async (req, context) => {
     }
 
     const cal = user.contributionsCollection.contributionCalendar;
-    const restricted = user.contributionsCollection.restrictedContributionsCount ?? 0;
     const weeks = cal.weeks.map((w) =>
       w.contributionDays.map((d) => ({
         date: d.date, // ISO yyyy-mm-dd
@@ -175,7 +173,7 @@ export default async (req, context) => {
       });
 
     const body = {
-      totalContributions: cal.totalContributions + restricted,
+      totalContributions: cal.totalContributions,
       weeks,
       publicRepos: user.repositories.totalCount,
       recentEvents,
