@@ -1,64 +1,30 @@
 import React from "react";
 /* global React */
 // GitHub-style contribution heatmap.
-// Generates a deterministic year of contribution data based on a seeded PRNG.
-// 53 weeks × 7 days = the iconic grid.
+// 53 weeks × 7 days = the iconic grid. Data comes from the live feed; until
+// it arrives we render an empty (placeholder) grid — never fake numbers.
 
-function seededRandom(seed) {
-  let s = seed;
-  return () => {
-    s = (s * 9301 + 49297) % 233280;
-    return s / 233280;
-  };
-}
-
-function generateContributions() {
-  const rng = seededRandom(8675309);
+// Build an empty 53-week grid ending today, so the layout (and month labels)
+// stay stable while the live data loads. Every cell is blank (level null).
+function buildEmptyWeeks() {
   const cells = [];
-  const today = new Date(2026, 3, 28); // Apr 28, 2026
-  // Start 52 weeks ago, snapped to Sunday
+  const today = new Date();
   const start = new Date(today);
   start.setDate(start.getDate() - 52 * 7 - today.getDay());
-
   for (let w = 0; w < 53; w++) {
     const week = [];
     for (let d = 0; d < 7; d++) {
       const date = new Date(start);
       date.setDate(start.getDate() + w * 7 + d);
-      if (date > today) {
-        week.push(null);
-        continue;
-      }
-      // weekend bias down, weekday up; some quiet weeks
-      const dayBias = (d === 0 || d === 6) ? 0.45 : 1.0;
-      // burst pattern — couple of intense periods
-      const isBurst = (w >= 8 && w <= 14) || (w >= 28 && w <= 33) || (w >= 44 && w <= 50);
-      const burstMul = isBurst ? 1.8 : 1.0;
-      const r = rng() * dayBias * burstMul;
-      let level = 0;
-      if (r > 0.55) level = 1;
-      if (r > 0.85) level = 2;
-      if (r > 1.05) level = 3;
-      if (r > 1.3) level = 4;
-      const count = level === 0 ? 0 : Math.floor(r * 6 + level * 2);
-      week.push({ date, level, count });
+      week.push(date > today ? null : { date, level: null, count: 0 });
     }
     cells.push(week);
   }
   return cells;
 }
 
-const CONTRIB_DATA = generateContributions();
+const EMPTY_WEEKS = buildEmptyWeeks();
 
-const RECENT_EVENTS = [
-  { when: "2 hours ago", repo: "pawelklasa/Dev-Resources", action: "Pushed 1 commit", detail: "docs: add OKLCH references to color section" },
-  { when: "Yesterday",   repo: "pawelklasa/showcase",      action: "Merged PR #12",   detail: "feat: catalog redirect from /portfolio" },
-  { when: "2 days ago",  repo: "pawelklasa/JS-playground", action: "Pushed 4 commits", detail: "experiments with the View Transition API" },
-  { when: "4 days ago",  repo: "getify/You-Dont-Know-JS",  action: "Opened issue #1842", detail: "ch3: minor errata in async generator example" },
-  { when: "6 days ago",  repo: "pawelklasa/test",          action: "Pushed 2 commits", detail: "wip: claude-design experiments" },
-  { when: "1 week ago",  repo: "pawelklasa/Dev-Resources", action: "Pushed 3 commits", detail: "added local-first databases section" },
-  { when: "9 days ago",  repo: "pawelklasa/showcase",      action: "Merged PR #11",   detail: "fix: reduced-motion hero fallback" },
-];
 
 function ContribCell({ level, T, count, date }) {
   // Use accent ramp for levels
@@ -95,23 +61,24 @@ function ContributionGraph({ theme, compact, data }) {
   };
   const Tx = { ...T, contribLevels: ramps[theme] || ramps.paper };
 
-  // Use live data when available, otherwise fall back to the seeded mock.
-  const cells = data?.weeks ?? CONTRIB_DATA;
-  const events = data?.recentEvents ?? RECENT_EVENTS;
+  // Use live data when available; otherwise show an empty placeholder grid
+  // and dashes for the stats — never fake numbers.
+  const cells = data?.weeks ?? EMPTY_WEEKS;
+  const events = data?.recentEvents ?? [];
   const isLive = !!data;
+  const dash = "—";
 
-  const totalContribs = data?.totalContributions
-    ?? cells.flat().reduce((sum, c) => sum + (c?.count || 0), 0);
-  const activeDays = cells.flat().filter((c) => c && c.count > 0).length;
-  const longestStreak = (() => {
+  const totalContribs = isLive ? data.totalContributions : null;
+  const activeDays = isLive ? cells.flat().filter((c) => c && c.count > 0).length : null;
+  const longestStreak = isLive ? (() => {
     let max = 0, cur = 0;
     for (const w of cells) for (const c of w) {
       if (!c) continue;
       if (c.count > 0) { cur++; max = Math.max(max, cur); } else cur = 0;
     }
     return max;
-  })();
-  const publicRepos = data?.publicRepos ?? 101;
+  })() : null;
+  const publicRepos = isLive ? (data.publicRepos ?? null) : null;
 
   // Month labels: detect when a new month starts at top row of week
   const monthLabels = [];
@@ -134,10 +101,10 @@ function ContributionGraph({ theme, compact, data }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 24 }}>
         <div>
           <div className="mono" style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: T.accent, marginBottom: 6 }}>
-            § FEED · {isLive ? "Live" : "Cached"}
+            § FEED · {isLive ? "Live" : "Loading"}
           </div>
           <div style={{ fontFamily: "'Inter Tight', sans-serif", fontSize: 32, letterSpacing: "-0.02em", color: T.ink }}>
-            <span className="mono" style={{ fontSize: 24, color: T.ink, letterSpacing: "0.02em" }}>{totalContribs.toLocaleString()}</span>
+            <span className="mono" style={{ fontSize: 24, color: T.ink, letterSpacing: "0.02em" }}>{isLive ? totalContribs.toLocaleString() : dash}</span>
             {" "}<span style={{ color: T.ink70, fontSize: 22 }}>contributions in the last year</span>
           </div>
           <div className="serif" style={{ fontStyle: "italic", color: T.ink70, marginTop: 6, fontSize: 14 }}>
@@ -146,11 +113,11 @@ function ContributionGraph({ theme, compact, data }) {
         </div>
         <div className="mono" style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: T.ink70, textAlign: "right", lineHeight: 1.7, display: "grid", gridTemplateColumns: "auto auto", columnGap: 14, rowGap: 2, justifyContent: "end", alignItems: "baseline" }}>
           <span style={{ color: T.ink40 }}>Active days</span>
-          <span style={{ color: T.ink, fontSize: 12, justifySelf: "end" }}>{activeDays}</span>
+          <span style={{ color: T.ink, fontSize: 12, justifySelf: "end" }}>{isLive ? activeDays : dash}</span>
           <span style={{ color: T.ink40 }}>Longest streak</span>
-          <span style={{ color: T.ink, fontSize: 12, justifySelf: "end" }}>{longestStreak} days</span>
+          <span style={{ color: T.ink, fontSize: 12, justifySelf: "end" }}>{isLive ? `${longestStreak} days` : dash}</span>
           <span style={{ color: T.ink40 }}>Public repos</span>
-          <span style={{ color: T.ink, fontSize: 12, justifySelf: "end" }}>{publicRepos}</span>
+          <span style={{ color: T.ink, fontSize: 12, justifySelf: "end" }}>{isLive ? (publicRepos ?? dash) : dash}</span>
         </div>
       </div>
 
