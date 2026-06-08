@@ -4,7 +4,14 @@
  * Calls the GitHub GraphQL + REST APIs server-side so the token never
  * touches the browser. Set the `GITHUB_TOKEN` env var in
  *   Netlify → Site configuration → Environment variables
- * (a classic PAT with `read:user` and `public_repo` scopes is enough).
+ *
+ * Token scopes (classic PAT):
+ *   - `read:user` + `public_repo` → PUBLIC contributions only. The total
+ *     will be LOWER than the one shown on your profile while logged in.
+ *   - `read:user` + `repo`        → includes PRIVATE contributions, so the
+ *     total matches the number on github.com/<you> when signed in.
+ *     Requires "Settings → Profile → Include private contributions on my
+ *     profile" to be enabled.
  *
  * Optional:
  *   GITHUB_USERNAME — defaults to `pawelklasa`.
@@ -12,9 +19,13 @@
  * Cached for 5 minutes via Cache-Control + Netlify CDN.
  */
 
+// NOTE: `viewer` (the authenticated user) is required to include PRIVATE
+// contributions in the calendar total. Querying `user(login: …)` returns
+// PUBLIC-only counts even with a `repo`-scoped token, which is why the total
+// would otherwise be lower than the number shown on your profile.
 const GRAPHQL_QUERY = `
-  query($login: String!) {
-    user(login: $login) {
+  query {
+    viewer {
       repositories(privacy: PUBLIC, ownerAffiliations: OWNER) { totalCount }
       contributionsCollection {
         contributionCalendar {
@@ -117,7 +128,7 @@ export default async (req, context) => {
       fetch("https://api.github.com/graphql", {
         method: "POST",
         headers: { ...headers, "content-type": "application/json" },
-        body: JSON.stringify({ query: GRAPHQL_QUERY, variables: { login: username } }),
+        body: JSON.stringify({ query: GRAPHQL_QUERY }),
       }),
       fetch(`https://api.github.com/users/${username}/events/public?per_page=30`, { headers }),
     ]);
@@ -131,7 +142,7 @@ export default async (req, context) => {
     }
 
     const gql = await gqlRes.json();
-    const user = gql.data?.user;
+    const user = gql.data?.viewer;
     if (!user) {
       return new Response(JSON.stringify({ error: "User not found", details: gql.errors }), {
         status: 404,
