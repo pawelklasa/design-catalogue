@@ -26,8 +26,10 @@
 const GRAPHQL_QUERY = `
   query {
     viewer {
+      login
       repositories(privacy: PUBLIC, ownerAffiliations: OWNER) { totalCount }
       contributionsCollection {
+        restrictedContributionsCount
         contributionCalendar {
           totalContributions
           weeks {
@@ -178,6 +180,11 @@ export default async (req, context) => {
       publicRepos: user.repositories.totalCount,
       recentEvents,
       fetchedAt: new Date().toISOString(),
+      _debug: {
+        viewerLogin: user.login,
+        oauthScopes: gqlRes.headers.get("x-oauth-scopes") || eventsRes.headers.get("x-oauth-scopes") || null,
+        restrictedContributionsCount: user.contributionsCollection.restrictedContributionsCount ?? null,
+      },
     };
 
     return new Response(JSON.stringify(body), {
